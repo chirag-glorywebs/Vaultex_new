@@ -101,55 +101,66 @@ function uplodImageByURL($url, $watermark = false)
         mkdir($year, 0777,true);
         mkdir($destinationPath,0777, true);
     }
-    $info = pathinfo($url); 
-    $contents = file_get_contents($url); 
-    $splitName = $info['filename'];
-    $splitExt = $info['extension'];
-    $slug = $splitName;
     
-    $slugCount = 0;
-    do {
-        if ($slugCount == 0) {
-            $currentSlug = slugify($slug);
-        } else {
-            $currentSlug = slugify($slug . '-' . $slugCount);
-        }
-        $checkImagePath = $destinationPath . '/' . $currentSlug . '.' . $splitExt;
-        if (file_exists($checkImagePath)) {
-            $slugCount++;
-        } else {
-            $slug = $currentSlug;
-            $slugCount = 0;
-        }
-    } while ($slugCount > 0);
-    $finalImage = $slug . '.' . $splitExt;
-    $finalImagePath = $destinationPath . '/' . $finalImage;
+    $contents = @file_get_contents($url);
+    if($contents){
+        $info = pathinfo($url); 
 
-    if($watermark == true){
-        $watermark_path = public_path('/uploads').'/500px.png';  
-       // $watermark_path= public_path('/uploads/2021/06').'/logo.png';   
-        $watermarkImg = Image::make($watermark_path);
-        $imgFile = Image::make($url);
-        $wmarkWidth=$watermarkImg->width();
-        $wmarkHeight=$watermarkImg->height();
-        $imgWidth=$imgFile->width();
-        $imgHeight=$imgFile->height();
-        $x=0;
-        $y=0;
-        while($y<=$imgHeight){
-            $imgFile->insert($watermark_path,'top-left',$x,$y);
-            $x+=$wmarkWidth;
-            if($x>=$imgWidth){
-                $x=0;
-                $y+=$wmarkHeight;
+        // $contents = file_get_contents($url); 
+
+        $splitName = $info['filename'];
+        $splitExt = $info['extension'];
+        $slug = $splitName;
+        
+        $slugCount = 0;
+        do {
+            if ($slugCount == 0) {
+                $currentSlug = slugify($slug);
+            } else {
+                $currentSlug = slugify($slug . '-' . $slugCount);
             }
+            $checkImagePath = $destinationPath . '/' . $currentSlug . '.' . $splitExt;
+            if (file_exists($checkImagePath)) {
+                $slugCount++;
+            } else {
+                $slug = $currentSlug;
+                $slugCount = 0;
+            }
+        } while ($slugCount > 0);
+        $finalImage = $slug . '.' . $splitExt;
+        $finalImagePath = $destinationPath . '/' . $finalImage;
+
+        if($watermark == true){
+            $watermark_path = public_path('/uploads').'/500px.png';  
+        // $watermark_path= public_path('/uploads/2021/06').'/logo.png';  
+            if(@file_get_contents($watermark_path) && @file_get_contents($url)){
+                $watermarkImg = Image::make($watermark_path);
+                $wmarkWidth=$watermarkImg->width();
+                $wmarkHeight=$watermarkImg->height();
+                $imgFile = Image::make($url);
+                $imgWidth=$imgFile->width();
+                $imgHeight=$imgFile->height();
+                $x=0;
+                $y=0;
+                while($y<=$imgHeight){
+                    $imgFile->insert($watermark_path,'top-left',$x,$y);
+                    $x+=$wmarkWidth;
+                    if($x>=$imgWidth){
+                        $x=0;
+                        $y+=$wmarkHeight;
+                    }
+                }
+                $imgFile->save(public_path($finalImagePath));
+                $watermarkImg->destroy();
+            } 
+        
+        }else{
+            file_put_contents($finalImagePath, $contents);
         }
-        $imgFile->save(public_path($finalImagePath));
-        $watermarkImg->destroy();
-    }else{
-        file_put_contents($finalImagePath, $contents);
+        return $finalImagePath;
+    } else {        
+        return '';
     }
-    return $finalImagePath;
 }
 
 function resizeImageByURL($url,$width,$height,$type, $watermark = false)
