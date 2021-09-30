@@ -39,7 +39,6 @@ use Illuminate\Support\Facades\Route;
  */
 
 /* Mobile APP */
-
 Route::get('/home', [HomeController::class, 'home'])->name('api.blogs');
 Route::get('homeweb',[HomeController::class,'homePage'])->name('api.homeweb');
 // without resource
@@ -87,6 +86,10 @@ Route::get('/getAllProductsSKU', [ProductsController::class, 'getAllProductsSKU'
 Route::post('/createProductVideoRequest', [UserProductVideoController::class, 'store'])->name('api.product.videoRequest');
 Route::get('/getProductVideos', [UserProductVideoController::class, 'index'])->name('api.product.videos');
 Route::get('/deleteProductVideos', [UserProductVideoController::class, 'destroy'])->name('api.product.deleteVideo');
+
+/* Start Water Mark Video for products*/
+Route::get('/watermark-user-product-video', [UserProductVideoController::class, 'waterMarkVideo'])->name('api.watermark-video');
+/* End Water Mark Video for products*/
 
 # search product api
 Route::get('/product/search',[ProductsController::class,'searchProducts'])->name('api.product.serach');
@@ -141,6 +144,7 @@ Route::group(['middleware' => 'auth:api'], function () {
 	Route::post('/carts/destroy', [CartController::class, 'destroy'])->name('api.cart.destroy');
 	Route::post('/carts/update', [CartController::class, 'update'])->name('api.cart.update');
 	Route::post('/applyCoupon', [CartController::class, 'applyCoupon'])->name('api.cart.applyCoupon');
+	Route::post('/check-item-in-stock', [CartController::class, 'checkItemInStock'])->name('api.check_item_in_stock');
 
 	/* BULK ORDER ROUTES */
 	Route::post('/rfq/create', [BulkOrderController::class, 'create'])->name('api.rfq.create');

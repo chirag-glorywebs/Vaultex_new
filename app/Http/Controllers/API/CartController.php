@@ -311,4 +311,92 @@ class CartController extends BaseController
     public function getCoupons(Request $request)
     {
     }
+
+
+    /**
+     *  Check cart items available in stock
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function checkItemInStock(Request $request){
+        try{
+            $apiUrl = 'http://192.168.10.20';
+            $requestData = $request->all();
+            $outOfStockProduct = [];
+            $outOfStockProductResult = [];
+            foreach ($requestData['items'] as $itemKey => $itemValue) {
+                $sku = ($itemValue['sku']) ? $itemValue['sku']: '';
+                $xml_data = $this->getXMLData($apiUrl.'/api/ItemMaster/GetItemStock?ItemGrp='.$sku);            
+                $xml = simplexml_load_string($xml_data, 'SimpleXMLElement', LIBXML_COMPACT | LIBXML_PARSEHUGE);
+                $apiStockArr = json_decode($xml);                        
+                
+                $stockResponse = SELF::getOutOfStockProduct($itemValue, $apiStockArr);
+                if($stockResponse){
+                    $outOfStockProductResult[] = $stockResponse;
+                }
+            }
+            
+            $outOfStockProduct = $outOfStockProductResult;
+            $outOfStockData = [];
+            if(count($outOfStockProduct) > 0){
+                $outOfStockData = $outOfStockProduct;
+                return $this->sendResponse($outOfStockData, 'Unfortunately we have just been informed that the below cart item\'s are discontinued and no longer available. Please update your quantities.');
+            }
+            return $this->sendResponse($outOfStockData, 'All products available in stock.');
+        } catch(Exception $exception) {
+            return $this->sendError($exception->getMessage());
+        }
+
+    }
+
+    public function getOutOfStockProduct($product, $apiStockArr){
+
+        $productAttr = $product['products_attributes'][0];  
+
+        $found_key = false;
+        if($apiStockArr){
+            $found_key = array_search($productAttr['item_code'], array_column($apiStockArr, 'ItemCode'));
+        }
+        if($found_key===false){
+            $result = [
+                'totalAvailableStock' => 0,
+                'item_code' => $productAttr['item_code'],
+                'product_name' => $product['product_name']
+            ];
+        } else {
+            $apiItem = $apiStockArr[$found_key];
+            $result = null;
+            if($apiItem->ItemCode==$productAttr['item_code']){
+                $inStockProducts = ($apiItem->AvailableStock - $apiItem->Committed);            
+                if( $productAttr['quantity'] > $inStockProducts ) {
+                    $result = [
+                        'totalAvailableStock' => $inStockProducts,
+                        'item_code' => $productAttr['item_code'],
+                        'product_name' => $product['product_name']
+                    ];
+                } 
+            } 
+        }
+        return $result;
+    }    
+
+    public  function getXMLData($url)
+    {
+        $curl = curl_init();
+        $curl = curl_init($url);
+        curl_setopt($curl, CURLOPT_URL, $url);
+        curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+        $headers = array(
+            "Accept: application/xml",
+        );
+        curl_setopt($curl, CURLOPT_HTTPHEADER, $headers);
+        //for debug only!
+        curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+        curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+
+        $resp = curl_exec($curl);
+        curl_close($curl);
+        return $resp; 
+    }
+
 }

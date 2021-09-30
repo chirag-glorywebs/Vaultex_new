@@ -202,7 +202,7 @@ class UserController extends BaseController
     {
         $validator = Validator::make($request->all(), [
             'email' => 'required',
-            'password' => 'required|string|min:6',
+            'password' => 'required|string|min:5',
         ]);
 
         if ($validator->fails()) {

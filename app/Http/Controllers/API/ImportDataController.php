@@ -382,19 +382,21 @@ class ImportDataController extends Controller
     //Import product proice list for vendor
     public function GetInvoiceDetails(Request $request )
     {   
+
+
         $FromDate = '';
         $ToDate = '';
-        if(isset($request->FromDate) && !empty($request->FromDate)){
-            $FromDate = str_replace( array( '\'', '"',
-            ',' , ';', '<', '>' ), '',$request->FromDate); ;
-        }
-        if(isset($request->ToDate) && !empty($request->ToDate)){
-            $ToDate = str_replace( array( '\'', '"',
-            ',' , ';', '<', '>' ), '',$request->ToDate); ;
-        }
-       
-        $xml_data = $this->getXMLData('http://192.168.10.20/api/Invoice/GetInvoiceDetails?CustomerCode=S01959&FromDate='.$FromDate.'&ToDate'.$ToDate);
-
+        // if(isset($request->FromDate) && !empty($request->FromDate)){
+        //     $FromDate = str_replace( array( '\'', '"',
+        //     ',' , ';', '<', '>' ), '',$request->FromDate); ;
+        // }
+        // if(isset($request->ToDate) && !empty($request->ToDate)){
+        //     $ToDate = str_replace( array( '\'', '"',
+        //     ',' , ';', '<', '>' ), '',$request->ToDate); ;
+        // }
+        
+        $customerCode = ($request->has('CustomerCode')) ? $request->CustomerCode : '';
+        $xml_data = $this->getXMLData('http://192.168.10.20/api/Invoice/GetInvoiceDetails?CustomerCode='.$customerCode.'&FromDate='.$FromDate.'&ToDate'.$ToDate);
         $xml = simplexml_load_string($xml_data, 'SimpleXMLElement', LIBXML_COMPACT | LIBXML_PARSEHUGE);   
         $invoices = json_decode($xml); 
         
