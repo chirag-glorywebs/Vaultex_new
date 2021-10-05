@@ -23,6 +23,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Maatwebsite\Excel\Facades\Excel;
 use Session;
+use File;
 
 class ImportController extends Controller
 {
@@ -200,10 +201,10 @@ class ImportController extends Controller
                                             ) {
                                                 $data[$i][$importArrayKeys[$key]] = $value;
                                             } 
-                                            // else {
-                                            //     Session::flash('message', 'Field mismatch Error.');
-                                            //     return redirect('/admin/import');
-                                            // }
+                                            else {
+                                                Session::flash('message', 'Column mismatch Error.');
+                                                return redirect('/admin/import');
+                                            }
                                         }
                                     }
                                 }
@@ -360,33 +361,38 @@ class ImportController extends Controller
                                 $model->seo_title = $seo_title;
                                 $model->seo_description = $seo_description;
                                 $model->seo_keyword = $seo_keyword;
+                               
                                 if(!empty($main_image)){
                                     if (!empty($model->main_image)) {
                                         $destinationPath = $model->main_image;
-                                        $fileExists = file_exists($destinationPath);
+                                        $fileExists = file_exists($destinationPath);                                        
                                         if ($fileExists) {
-                                            unlink($destinationPath);
+                                            // unlink($destinationPath);
+                                            File::delete($destinationPath);
                                         }
                                     }
                                     if (!empty($model->thumbnail_image)) {
                                         $destinationPath = $model->thumbnail_image;
                                         $fileExists = file_exists($destinationPath);
                                         if ($fileExists) {
-                                            unlink($destinationPath);
+                                            // unlink($destinationPath);
+                                            File::delete($destinationPath);
                                         }
                                     }
                                     if (!empty($model->medium_image)) {
                                         $destinationPath = $model->medium_image;
                                         $fileExists = file_exists($destinationPath);
                                         if ($fileExists) {
-                                            unlink($destinationPath);
+                                            // unlink($destinationPath);
+                                            File::delete($destinationPath);
                                         }
                                     }
                                     if (!empty($model->large_image)) {
                                         $destinationPath = $model->large_image;
                                         $fileExists = file_exists($destinationPath);
                                         if ($fileExists) {
-                                            unlink($destinationPath);
+                                            // unlink($destinationPath);
+                                            File::delete($destinationPath);
                                         }
                                     }
                                     //medium image
@@ -397,22 +403,26 @@ class ImportController extends Controller
                                     $model->large_image = resizeImageByURL($main_image,600,600,'large',true);
                                 $model->main_image  = uplodImageByURL($main_image,true);
                                 }
+
                                 if(!empty($video)){
                                     if (!empty($model->video)) {
                                         $destinationPath = $model->video;
                                         $fileExists = file_exists($destinationPath);
                                         if ($fileExists) {
-                                            unlink($destinationPath);
+                                            // unlink($destinationPath);
+                                            File::delete($destinationPath);
                                         }
                                     }
                                     $model->video  = uplodImageByURL($video);
                                 }
+
                                 if(!empty($download_datasheet)){
                                     if (!empty($model->download_datasheet)) {
                                         $destinationPath = $model->download_datasheet;
                                         $fileExists = file_exists($destinationPath);
                                         if ($fileExists) {
-                                            unlink($destinationPath);
+                                            // unlink($destinationPath);
+                                            File::delete($destinationPath);
                                         }
                                     }
                                     $model->download_datasheet  = uplodImageByURL($download_datasheet);
@@ -459,7 +469,8 @@ class ImportController extends Controller
                                         foreach($exited_techdocs as $destinationPath){
                                             $fileExists = file_exists($destinationPath);
                                             if ($fileExists) {
-                                                unlink($destinationPath);
+                                                // unlink($destinationPath);
+                                                File::delete($destinationPath);
                                             }
                                         }
                                     }
@@ -484,7 +495,8 @@ class ImportController extends Controller
                                         foreach($exited_gallery as $destinationPath){
                                             $fileExists = file_exists($destinationPath);
                                             if ($fileExists) {
-                                                unlink($destinationPath);
+                                                // unlink($destinationPath);
+                                                File::delete($destinationPath);
                                             }
                                         }
                                     }
@@ -511,7 +523,8 @@ class ImportController extends Controller
                                         foreach($exited_pdImages as $destinationPath){
                                             $fileExists = file_exists($destinationPath);
                                             if ($fileExists) {
-                                                unlink($destinationPath);
+                                                // unlink($destinationPath);
+                                                File::delete($destinationPath);
                                             }
                                         }
                                     }
@@ -525,190 +538,13 @@ class ImportController extends Controller
                                     $model->packaging_delivery_images = implode(',', $pd_names);  
                                 }
                             
-                                $model->trending_product = $trending_product;
-                                $model->best_selling = $best_selling;
-                                $model->bid_quote = $bid_quote;
+                                $model->trending_product = ($trending_product) ? $trending_product : 0;
+                                $model->best_selling = ($best_selling) ? $best_selling : 0;
+                                $model->bid_quote = ($bid_quote) ? $bid_quote : 0;
                                 $model->save();
                                 $totalUpdate++;
                             }else{
                                 $totalInsert++;
-
-                            /*   $model = new Products;
-                        
-                                $catId = Categories::where('category_name', $category_id)->first('id');
-                                $brandId = Brand::where('brand_name', $brand_id)->first('id');
-                                $splitAttributes = preg_split("/[|]/", $attributes);
-
-                                $attId = Attributes::first();
-
-                                foreach ($splitAttributes as $key => $value) {
-
-                                    //$attName = strtok($value, '>');
-                                    $explodeAtt = explode('>', $value);
-                                    $attName = $explodeAtt[0];
-                                    $variationName = $explodeAtt[1];
-                                    $attTrimName = trim($attName);
-                                    $variationTrim = trim($variationName);
-
-
-                                    $attId = NULL;
-                                    $attData = Attributes::where('attribute_name', $attTrimName)->first('id');
-                                    if (empty($attData)) {
-                                        $attNew = new Attributes();
-                                        $attNew->attribute_name = $attTrimName;
-                                        $attNew->save();
-                                        $attId = $attNew->id;
-                                    } else {
-                                        $attId = $attData->id;
-                                    }
-
-                                    $variationId = NULL;
-                                    $variationData = Attributes_variations::where('variation_name', $variationTrim)->where('attribute_id', $attId)->first('id');
-
-                                    if (empty($variationData)) {
-                                        $variationNew = new Attributes_variations();
-                                        $variationNew->attribute_id = $attId;
-                                        $variationNew->variation_name = $variationTrim;
-                                        $variationNew->save();
-                                        $variationId = $variationNew->id;
-                                    } else {
-                                        $variationId = $variationData->id;
-                                    }
-                                }
-    
-
-                                $info = pathinfo($main_image);
-                                $contents = filter_var($main_image, FILTER_SANITIZE_URL);
-                                // $file = '/tmp/' . $info['basename'];
-                                $path = date('Y') . '/' . date('m');
-                                $destinationPath = 'uploads/' . $path . '/' . $info['basename'];
-                                file_put_contents($destinationPath, $contents);
-                                new UploadedFile($destinationPath, $info['basename']);
-                            
-
-
-                                $model->product_name = $product_name;
-                                $model->description = $description;
-                                $model->short_description = $short_description;
-                                $model->category_id = $catId->id;
-                                $model->brand_id = $brandId->id;
-                                $model->sku = $sku;
-                                $model->main_image = $destinationPath;
-                                $model->regular_price = $regular_price;
-                                $model->sale_price = $sale_price;
-                                $model->inventory = $inventory;
-                                $model->IsCommited = $IsCommited;
-                                $model->OnOrder = $OnOrder;
-                                $model->specification = $specification;
-                                $model->tech_documents = $tech_documents;
-                                $explodeVideo = explode('|', $video);
-                                $implodeVideo = implode(", ", (array)$explodeVideo);
-                                $model->video = $implodeVideo;
-                                //$model->video = $video;
-                                //$model->gallery = $gallery;
-                                $explodeGallery = explode('|', $gallery);
-                                $implodeGallery = implode(", ", (array)$explodeGallery);
-                                $model->gallery = $implodeGallery;
-                                $model->download_datasheet = $download_datasheet;
-                                $model->seo_title = $seo_title;
-                                $model->seo_description = $seo_description;
-                                $model->seo_keyword = $seo_keyword;
-                                $model->status = $status;
-                                $model->save();
-
-                                $productsDetailsData = ProductDetail::where('product_id', $model->id)->first('id');
-
-                                if (empty($productsDetailsData)) {
-                                    $productDetails = new ProductDetail();
-                                    $productDetails->product_id = $model->id;
-                                    $productDetails->VatGourpSa = trim($vatGourpSa);
-                                    $productDetails->U_Size = trim($U_Size);
-                                    $productDetails->SizeName = trim($sizeName);
-                                    $productDetails->U_SCartQty = trim($u_SCartQty);
-                                    $productDetails->U_CBM = trim($U_CBM);
-                                    $productDetails->OnHand = trim($OnHand);
-                                    $productDetails->U_Itemgrp = trim($U_Itemgrp);
-                                    $productDetails->U_Itemgrpname = trim($U_Itemgrpname);
-                                    $productDetails->U_OrgCountCod = trim($U_OrgCountCod);
-                                    $productDetails->U_OrgCountNam = trim($U_OrgCountNam);
-                                    $productDetails->U_CartQty = trim($U_CartQty);
-                                    $productDetails->SuppCatNum = trim($SuppCatNum);
-                                    $productDetails->BuyUnitMsr = trim($BuyUnitMsr);
-                                    $productDetails->SalUnitMsr = trim($SalUnitMsr);
-                                    $productDetails->FirmCode = trim($FirmCode);
-                                    $productDetails->FirmName = trim($FirmName);
-                                    $productDetails->U_HsCode = trim($U_HsCode);
-                                    $productDetails->U_HsName = trim($U_HsName);
-                                    $productDetails->QryGroup1 = trim($QryGroup1);
-                                    $productDetails->QryGroup2 = trim($QryGroup2);
-                                    $productDetails->QryGroup3 = trim($QryGroup3);
-                                    $productDetails->QryGroup4 = trim($QryGroup4);
-                                    $productDetails->QryGroup5 = trim($QryGroup5);
-                                    $productDetails->QryGroup6 = trim($QryGroup6);
-                                    $productDetails->QryGroup7 = trim($QryGroup7);
-                                    $productDetails->QryGroup8 = trim($QryGroup8);
-                                    $productDetails->QryGroup9 = trim($QryGroup9);
-                                    $productDetails->QryGroup10 = trim($QryGroup10);
-                                    $productDetails->QryGroup11 = trim($QryGroup11);
-                                    $productDetails->QryGroup12 = trim($QryGroup12);
-                                    $productDetails->QryGroup13 = trim($QryGroup13);
-                                    $productDetails->QryGroup14 = trim($QryGroup14);
-                                    $productDetails->QryGroup15 = trim($QryGroup15);
-                                    $productDetails->QryGroup16 = trim($QryGroup16);
-                                    $productDetails->QryGroup17 = trim($QryGroup17);
-                                    $productDetails->QryGroup18 = trim($QryGroup18);
-                                    $productDetails->QryGroup19 = trim($QryGroup19);
-                                    $productDetails->QryGroup20 = trim($QryGroup20);
-                                    $productDetails->QryGroup21 = trim($QryGroup21);
-                                    $productDetails->QryGroup22 = trim($QryGroup22);
-                                    $productDetails->QryGroup23 = trim($QryGroup23);
-                                    $productDetails->QryGroup24 = trim($QryGroup24);
-                                    $productDetails->QryGroup25 = trim($QryGroup25);
-                                    $productDetails->QryGroup26 = trim($QryGroup26);
-                                    $productDetails->QryGroup27 = trim($QryGroup27);
-                                    $productDetails->QryGroup28 = trim($QryGroup28);
-                                    $productDetails->QryGroup29 = trim($QryGroup29);
-                                    $productDetails->QryGroup30 = trim($QryGroup30);
-                                    $productDetails->QryGroup30 = trim($QryGroup30);
-                                    $productDetails->QryGroup31 = trim($QryGroup31);
-                                    $productDetails->QryGroup32 = trim($QryGroup32);
-                                    $productDetails->QryGroup33 = trim($QryGroup33);
-                                    $productDetails->QryGroup34 = trim($QryGroup34);
-                                    $productDetails->QryGroup35 = trim($QryGroup35);
-                                    $productDetails->QryGroup36 = trim($QryGroup36);
-                                    $productDetails->QryGroup37 = trim($QryGroup37);
-                                    $productDetails->QryGroup38 = trim($QryGroup38);
-                                    $productDetails->QryGroup39 = trim($QryGroup39);
-                                    $productDetails->QryGroup39 = trim($QryGroup39);
-                                    $productDetails->QryGroup40 = trim($QryGroup40);
-                                    $productDetails->QryGroup41 = trim($QryGroup41);
-                                    $productDetails->QryGroup42 = trim($QryGroup42);
-                                    $productDetails->QryGroup43 = trim($QryGroup43);
-                                    $productDetails->QryGroup44 = trim($QryGroup44);
-                                    $productDetails->QryGroup45 = trim($QryGroup45);
-                                    $productDetails->QryGroup46 = trim($QryGroup46);
-                                    $productDetails->QryGroup47 = trim($QryGroup47);
-                                    $productDetails->QryGroup48 = trim($QryGroup48);
-                                    $productDetails->QryGroup49 = trim($QryGroup49);
-                                    $productDetails->QryGroup50 = trim($QryGroup50);
-                                    $productDetails->QryGroup51 = trim($QryGroup51);
-                                    $productDetails->QryGroup52 = trim($QryGroup52);
-                                    $productDetails->QryGroup53 = trim($QryGroup53);
-                                    $productDetails->QryGroup54 = trim($QryGroup54);
-                                    $productDetails->QryGroup55 = trim($QryGroup55);
-                                    $productDetails->QryGroup56 = trim($QryGroup56);
-                                    $productDetails->QryGroup57 = trim($QryGroup57);
-                                    $productDetails->QryGroup58 = trim($QryGroup58);
-                                    $productDetails->QryGroup59 = trim($QryGroup59);
-                                    $productDetails->QryGroup60 = trim($QryGroup60);
-                                    $productDetails->QryGroup61 = trim($QryGroup61);
-                                    $productDetails->QryGroup62 = trim($QryGroup62);
-                                    $productDetails->QryGroup63 = trim($QryGroup63);
-                                    $productDetails->QryGroup64 = trim($QryGroup64);
-                                    $productDetails->save();
-                                } else {
-                                    $proID = $productsDetailsData->id;
-                                } */
                             }
 
                         }
@@ -721,10 +557,13 @@ class ImportController extends Controller
                         Session::flash('message', 'Error occured');
                         return redirect('/admin/import');
                     }
+                } else {
+                    Session::flash('message', 'The file is empty or not in the correct csv format');
+                    return redirect('/admin/import');
                 }
             }
         } catch(\Exception $e){
-            // Session::flash('message', $e->getLine().' - '.$e->getMessage());
+            // Session::flash('message', $e->getLine().' - '.$e->getFile().' - '.$e->getMessage());
             Session::flash('message', 'Something went wrong.');
             return redirect('/admin/import');
 
@@ -733,7 +572,7 @@ class ImportController extends Controller
 
     public function faqImportCsv(Request $request)
     {
-     
+
         try{
             $this->validate($request,
                 ['faq_file' => 'required']
@@ -743,7 +582,6 @@ class ImportController extends Controller
             $tempName = $file->getPathName();
             $fileExtension = $file->getClientOriginalExtension();
             $errors = $file->getError();
-
             if ($errors == 0) {
                 if (($fileExtension == "csv") && (!empty($tempName))) {
                     $i = 0;
@@ -821,10 +659,13 @@ class ImportController extends Controller
 
                         Session::flash('message',  $message);
                         return redirect('/admin/import');
-                    }else{
+                    } else{
                         Session::flash('message', 'Error occured');
                         return redirect('/admin/import');
                     }
+                } else {
+                    Session::flash('message', 'The file is empty or not in the correct csv format');
+                    return redirect('/admin/import');
                 }
             }
         } catch(\Exception $e){
@@ -907,7 +748,8 @@ class ImportController extends Controller
                                     $destinationPath = $trainingVideoData->video;
                                     $fileExists = file_exists($destinationPath);
                                     if ($fileExists) {
-                                        unlink($destinationPath);
+                                        // unlink($destinationPath);
+                                        File::delete($destinationPath);
                                     }
                                 }
                                if(!empty($trimvideo)){
@@ -1016,7 +858,8 @@ class ImportController extends Controller
                                     $destinationPath = $featureVideoData->video;
                                     $fileExists = file_exists($destinationPath);
                                     if ($fileExists) {
-                                        unlink($destinationPath);
+                                        // unlink($destinationPath);
+                                        File::delete($destinationPath);
                                     }
                                 }
                                if(!empty($trimvideo)){
