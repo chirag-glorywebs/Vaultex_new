@@ -19,6 +19,7 @@ use App\Models\ProductAttribute;
 use Auth;
 use DB;
 use Image;
+use File;
 use Illuminate\Validation\Rule;
 use Session;
 use Yajra\DataTables\Facades\DataTables; 
@@ -195,21 +196,21 @@ class ProductsController extends Controller
             $destinationPath = $productDelete->main_image;
             $fileExists = file_exists($destinationPath);
             if ($fileExists) {
-                unlink($destinationPath);
+                File::delete($destinationPath);
             }
         }
         if ($productDelete->video != null || $productDelete->video != '') {
             $destinationPath = $productDelete->video;
             $fileExists = file_exists($destinationPath);
             if ($fileExists) {
-                unlink($destinationPath);
+                File::delete($destinationPath);
             }
         }
         if ($productDelete->download_datasheet != null || $productDelete->download_datasheet != '') {
             $destinationPath = $productDelete->download_datasheet;
             $fileExists = file_exists($destinationPath);
             if ($fileExists) {
-                unlink($destinationPath);
+                File::delete($destinationPath);
             }
         }
         $productDelete->delete();
@@ -301,28 +302,28 @@ class ProductsController extends Controller
                 $destinationPath = $products->main_image;
                 $fileExists = file_exists($destinationPath);
                 if ($fileExists) {
-                    unlink($destinationPath);
+                    File::delete($destinationPath);
                 }
             }
             if ($products->large_image != null || $products->large_image != '') {
                 $destinationPath = $products->large_image;
                 $fileExists = file_exists($destinationPath);
                 if ($fileExists) {
-                    unlink($destinationPath);
+                    File::delete($destinationPath);
                 }
             }
             if ($products->main_image != null || $products->main_image != '') {
                 $destinationPath = $products->main_image;
                 $fileExists = file_exists($destinationPath);
                 if ($fileExists) {
-                    unlink($destinationPath);
+                    File::delete($destinationPath);
                 }
             }
             if ($products->thumbnail_image != null || $products->thumbnail_image != '') {
                 $destinationPath = $products->thumbnail_image;
                 $fileExists = file_exists($destinationPath);
                 if ($fileExists) {
-                    unlink($destinationPath);
+                    File::delete($destinationPath);
                 }
             }
             if ($req->hasFile('main_image')) {
@@ -354,7 +355,7 @@ class ProductsController extends Controller
                 $destinationPath = $products->video;
                 $fileExists = file_exists($destinationPath);
                 if ($fileExists) {
-                    unlink($destinationPath);
+                    File::delete($destinationPath);
                 }
             }
             $videoFile = $req->file('video');
@@ -366,7 +367,7 @@ class ProductsController extends Controller
                 $destinationPath = $products->download_datasheet;
                 $fileExists = file_exists($destinationPath);
                 if ($fileExists) {
-                    unlink($destinationPath);
+                    File::delete($destinationPath);
                 }
             }
             $downloadDatasheetSave = $req->file('download_datasheet');
@@ -441,7 +442,7 @@ class ProductsController extends Controller
                     foreach($exited_gallery as $destinationPath){
                         $fileExists = file_exists($destinationPath);
                         if ($fileExists) {
-                            unlink($destinationPath);
+                            File::delete($destinationPath);
                         }
                     }
                 }

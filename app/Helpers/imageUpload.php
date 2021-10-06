@@ -28,7 +28,7 @@ function slugify($slug)
 
 function uplodImage($blogImage, $watermark = false)
 { 
-    $watermarkImageName = '393x200.png';
+    $watermarkImageName = 'watermark-large.png';
     $year = 'uploads/' . date('Y');
     $destinationPath =  $year. '/' . date('m');
     if(file_exists($year)){
@@ -65,26 +65,11 @@ function uplodImage($blogImage, $watermark = false)
     //Insert image path
   
     if($watermark == true){
-         $watermark_path = public_path('/uploads').'/'.$watermarkImageName;  
+         $watermark_path = 'uploads/'.$watermarkImageName;  
         // // $watermark_path= public_path('/uploads/2021/06').'/logo.png';   
          $watermarkImg = Image::make($watermark_path);
-        //  $imgFile = Image::make($blogImage->getRealPath());
-        //  $wmarkWidth=$watermarkImg->width();
-        //  $wmarkHeight=$watermarkImg->height();
-        //  $imgWidth=$imgFile->width();
-        //  $imgHeight=$imgFile->height();
-        //  $x=0;
-        //  $y=0;
-        //  while($y<=$imgHeight){
-        //      $imgFile->insert($watermark_path,'top-left',$x,$y);
-        //      $x+=$wmarkWidth;
-        //      if($x>=$imgWidth){
-        //          $x=0;
-        //          $y+=$wmarkHeight;
-        //      }
-        //  }
         $imgFile = waterMarkImage($blogImage->getRealPath(), $watermark_path);
-         $imgFile->save(public_path($destinationPath . '/' . $finalImage));
+         $imgFile->save($destinationPath . '/' . $finalImage);
          $watermarkImg->destroy();
     }else{
         $blogImage->move($destinationPath, $moveImage);
@@ -95,7 +80,7 @@ function uplodImage($blogImage, $watermark = false)
 
 function uplodImageByURL($url, $watermark = false)
 {
-    $watermarkImageName = '393x200.png';
+    $watermarkImageName = 'watermark-large.png';
     $year = 'uploads/' . date('Y');
     $destinationPath =  $year. '/' . date('m');
     if(file_exists($year)){
@@ -136,27 +121,12 @@ function uplodImageByURL($url, $watermark = false)
         $finalImagePath = $destinationPath . '/' . $finalImage;
 
         if($watermark == true){
-            $watermark_path = public_path('/uploads').'/'.$watermarkImageName;  
+            $watermark_path = 'uploads/'.$watermarkImageName;  
             if(@file_get_contents($watermark_path) && @file_get_contents($url)){
-                $watermarkImg = Image::make($watermark_path);
-                // $wmarkWidth=$watermarkImg->width();
-                // $wmarkHeight=$watermarkImg->height();
-                // $imgFile = Image::make($url);
-                // $imgWidth=$imgFile->width();
-                // $imgHeight=$imgFile->height();
-                // $x=0;
-                // $y=0;
-                // while($y<=$imgHeight){
-                //     $imgFile->insert($watermark_path,'top-left',$x,$y);
-                //     $x+=$wmarkWidth;
-                //     if($x>=$imgWidth){
-                //         $x=0;
-                //         $y+=$wmarkHeight;
-                //     }
-                // }
+                $watermarkImg = Image::make($watermark_path);                
                 $imgFile = waterMarkImage($url, $watermark_path);
 
-                $imgFile->save(public_path($finalImagePath));
+                $imgFile->save($finalImagePath);
                 $watermarkImg->destroy();
             } 
         
@@ -171,7 +141,7 @@ function uplodImageByURL($url, $watermark = false)
 
 function resizeImageByURL($url,$width,$height,$type, $watermark = false)
 {
-    $watermarkImageName = '393x200.png';
+    $watermarkImageName = 'watermark-large.png';
     $year = 'uploads/' . date('Y');
     $destinationPath =  $year. '/' . date('m');
     if(file_exists($year)){
@@ -212,39 +182,24 @@ function resizeImageByURL($url,$width,$height,$type, $watermark = false)
     $finalImagePath = $destinationPath . '/' . $finalData;
 
     if($watermark == true){
-        $watermark_path = public_path('/uploads').'/'.$watermarkImageName;  
+        $watermark_path = 'uploads/'.$watermarkImageName;  
         //    // $watermark_path= public_path('/uploads/2021/06').'/logo.png';   
         $watermarkImg = Image::make($watermark_path);
-    //     $imgFile = Image::make($url);
-    //     $wmarkWidth=$watermarkImg->width();
-    //     $wmarkHeight=$watermarkImg->height();
-    //     $imgWidth=$imgFile->width();
-    //     $imgHeight=$imgFile->height();
-    //     $x=0;
-    //     $y=0;
-    //     while($y<=$imgHeight){
-    //         $imgFile->insert($watermark_path,'top-left',$x,$y);
-    //         $x+=$wmarkWidth;
-    //         if($x>=$imgWidth){
-    //             $x=0;
-    //             $y+=$wmarkHeight;
-    //         }
-    //     }
     $imgFile = waterMarkImage($url, $watermark_path);
 
         $imgFile->fit($width,$height);
-        $imgFile->save(public_path($finalImagePath));
+        $imgFile->save($finalImagePath);
         $watermarkImg->destroy();
    }else{
         $image_resize = Image::make($url);
         $image_resize->fit($width,$height);
-        $image_resize->save(public_path($finalImagePath));
+        $image_resize->save($finalImagePath);
    }
    return $finalImagePath;
 }
 function resizeImage($blogImage,$width,$height,$type , $watermark = false)
 { 
-    $watermarkImageName = '393x200.png';
+    $watermarkImageName = 'watermark-large.png';
     $year = 'uploads/' . date('Y');
     $destinationPath =  $year. '/' . date('m');
     if(file_exists($year)){
@@ -286,34 +241,20 @@ function resizeImage($blogImage,$width,$height,$type , $watermark = false)
      
 
     if($watermark == true){
-        $watermark_path = public_path('/uploads').'/'.$watermarkImageName;  
+        $watermark_path = 'uploads/'.$watermarkImageName;  
         //    // $watermark_path= public_path('/uploads/2021/06').'/logo.png';   
         $watermarkImg = Image::make($watermark_path);
-    //     $imgFile = Image::make($blogImage->getRealPath());
-    //     $wmarkWidth=$watermarkImg->width();
-    //     $wmarkHeight=$watermarkImg->height();
-    //     $imgWidth=$imgFile->width();
-    //     $imgHeight=$imgFile->height();
-    //     $x=0;
-    //     $y=0;
-    //     while($y<=$imgHeight){
-    //         $imgFile->insert($watermark_path,'top-left',$x,$y);
-    //         $x+=$wmarkWidth;
-    //         if($x>=$imgWidth){
-    //             $x=0;
-    //             $y+=$wmarkHeight;
-    //         }
-    //     }
+    
     $imgFile = waterMarkImage($blogImage->getRealPath(), $watermark_path);
 
         $imgFile->fit($width,$height);
-        $imgFile->save(public_path($destinationPath . '/' . $finalData));
+        $imgFile->save($destinationPath . '/' . $finalData);
         $watermarkImg->destroy();
    }else{
         $image_resize = Image::make($blogImage->getRealPath());
         // $image_resize->orientate(); 
         $image_resize->fit($width,$height);
-        $image_resize->save(public_path($destinationPath.'/' .$finalData));
+        $image_resize->save($destinationPath.'/' .$finalData);
    }
     $finalImagePath = $destinationPath . '/' . $finalData;
     return $finalImagePath;
