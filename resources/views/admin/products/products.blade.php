@@ -12,15 +12,18 @@
             <table class="table table-bordered table-hover " id="datatable">
                 <thead>
                 <tr>
-                    <th>No</th>
-                    <th>Product Name</th>
-                    <th>Image</th>
-                    <th>SKU</th>
-                    <th>Category</th>
-                    <th>Brand</th>
-                    <th>Price</th>
-                    <th>Status</th>
-                    <th>Action</th>
+                    {{-- <th>
+                        <input type="checkbox" name="select_all" value="1" id="product-select-all">
+                    </th> --}}
+                    <th></th>
+                    <th></th>
+                    <th></th>
+                    <th></th>
+                    <th></th>
+                    <th></th>
+                    <th></th>
+                    <th></th>
+                    <th></th>
                 </tr>
                 </thead>
                 <tbody>
@@ -53,6 +56,14 @@ div.dataTables_wrapper div.dataTables_processing {
     font-size: 25px;
  
 }
+table.dataTable tr th.select-checkbox.selected::after {
+    content: "✔";
+    margin-top: -11px;
+    margin-left: -4px;
+    text-align: center;
+    text-shadow: rgb(176, 190, 217) 1px 1px, rgb(176, 190, 217) -1px -1px, rgb(176, 190, 217) 1px -1px, rgb(176, 190, 217) -1px 1px;
+}
+
     </style>
 @endsection
 
@@ -66,24 +77,159 @@ div.dataTables_wrapper div.dataTables_processing {
     <script type="text/javascript">
         //Data table initialization
         $(document).ready(function () {
-            var table = $('#datatable').DataTable({
+            var table = $('#datatable').DataTable({                                               
+                select: {
+                    style: 'multi',
+                    selector: 'td:first-child'
+                },
                 processing: true,
                 serverSide: true,
                 responsive: true,
-                //order: [[0, 'desc']],
+                // order: [[1, 'asc']],
                 ajax: "{{ route('products.index') }}",
-                columns: [
-                    {data: 'id', name: 'id'},
-                    {data: 'product_name', name: 'product_name'},
-                    {data: 'mainImage', name: 'mainImage'},
-                    {data: 'sku', name: 'sku'},
-                    {data: 'category_name', name: 'category_name'},
-                    {data: 'brand_name', name: 'brand_name'},
-                    {data: 'regular_price', name: 'regular_price'},
-                    {data: 'status', name: 'status'},
-                    {data: 'action', name: 'action', orderable: false, searchable: false},
+                columns: [ 
+                    // {
+                    //     data: "id", 
+                    //     name: "select-checkbox",
+                    //     orderable: false,
+                    //     searchable: false,
+                    //     render: function (data, type, full, meta){
+                    //         return '<input type="checkbox" name="id[]" value="' + $('<div/>').text(data).html() + '">';
+                    //     }               
+                    // },                      
+                    {
+                        sTitle: "No",
+                        data: "id", 
+                        name: "id",
+                        orderable: true,
+                        searchable: false,
+                        render: function(data, type, row, meta) {
+                            var str = (data) ? data : '';
+                            return str;
+                        }                
+                    },               
+                    {
+                        sTitle: "Product Name",
+                        data: "product_name", 
+                        name: "product_name",
+                        orderable: true,
+                        searchable: true,
+                        render: function(data, type, row, meta) {
+                            var str = (data) ? data : '';
+                            return str;
+                        }                
+                    },
+                    {
+                        sTitle: "Image",
+                        data: "mainImage", 
+                        name: "mainImage",
+                        orderable: false,
+                        searchable: false,
+                        render: function(data, type, row, meta) {
+                            var str = (data) ? data : '';                           
+                            return str;
+                        }                
+                    },
+                    {
+                        sTitle: "SKU",
+                        data: "sku", 
+                        name: "sku",
+                        orderable: true,
+                        searchable: true,
+                        render: function(data, type, row, meta) {
+                            var str = (data) ? data : '';
+                            return str;
+                        }                
+                    },
+                    {
+                        sTitle: "Category",
+                        data: "category_name", 
+                        name: "categories.category_name",
+                        orderable: true,
+                        searchable: true,
+                        render: function(data, type, row, meta) {
+                            var str = (data) ? data : '';
+                            return str;
+                        }                
+                    },
+                    {
+                        sTitle: "Brand",
+                        data: "brand_name", 
+                        name: "brands.brand_name",
+                        orderable: true,
+                        searchable: true,
+                        render: function(data, type, row, meta) {
+                            var str = (data) ? data : '';
+                            return str;
+                        }                
+                    },
+                    {
+                        sTitle: "Price",
+                        data: "regular_price", 
+                        name: "regular_price",
+                        orderable: true,
+                        searchable: true,
+                        render: function(data, type, row, meta) {
+                            var str = (data) ? data : '';
+                            return str;
+                        }                
+                    },                    
+                    {
+                        sTitle: "Status",
+                        data: "status", 
+                        name: "status",
+                        orderable: true,
+                        searchable: false,
+                        render: function(data, type, row, meta) {
+                            var str = (data) ? data : '';
+                            return str;
+                        }                
+                    },
+                    {
+                        sTitle: "Action",
+                        data: "action", 
+                        name: "action",
+                        orderable: false,
+                        searchable: false,
+                        render: function(data, type, row, meta) {
+                            var str = (data) ? data : '';
+                            return str;
+                        }                
+                    }
+                    // {data: 'id', name: 'id'},
+                    // {data: 'product_name', name: 'product_name'},
+                    // {data: 'mainImage', name: 'mainImage'},  
+                    // {data: 'sku', name: 'sku'},
+                    // {data: 'category_name', name: 'category_name'},
+                    // {data: 'brand_name', name: 'brand_name'},
+                    // {data: 'regular_price', name: 'regular_price'},
+                    // {data: 'status', name: 'status'},
+                    // {data: 'action', name: 'action', orderable: false, searchable: false},
                 ]
             });
+
+            // // Handle click on "Select all" control
+            // $('#product-select-all').on('click', function(){
+            //     // Get all rows with search applied
+            //     var rows = table.rows({ 'search': 'applied' }).nodes();
+            //     // Check/uncheck checkboxes for all rows in the table
+            //     $('input[type="checkbox"]', rows).prop('checked', this.checked);
+            // });
+
+            // // Handle click on checkbox to set state of "Select all" control
+            // $('#datatable tbody').on('change', 'input[type="checkbox"]', function(){
+            //     // If checkbox is not checked
+            //     if(!this.checked){
+            //         var el = $('#product-select-all').get(0);
+            //         // If "Select all" control is checked and has 'indeterminate' property
+            //         if(el && el.checked && ('indeterminate' in el)){
+            //             // Set visual state of "Select all" control
+            //             // as 'indeterminate'
+            //             el.indeterminate = true;
+            //         }
+            //     }
+            // });
+
         });
     </script>
 @endsection

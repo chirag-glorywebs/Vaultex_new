@@ -34,8 +34,8 @@ class ProductsController extends Controller
         if ($request->ajax()) {
              $products = Products::leftJoin('categories', 'categories.id', '=', 'products.category_id')
                 ->leftJoin('brands', 'brands.id', '=', 'products.brand_id')
-                ->select('products.*', 'categories.category_name', 'brands.brand_name')
-                ->get();  
+                ->select('products.*', 'categories.category_name', 'brands.brand_name');
+                // ->get();  
             
 
          /*    $products = Products::join('brands', 'brands.id', '=', 'products.brand_id')
@@ -115,11 +115,11 @@ class ProductsController extends Controller
         if ($req->hasFile('main_image')) {
             $mainImage = $req->file('main_image');
             //thumbnail image
-            $thumbnail_image = resizeImage($mainImage,100,100,'thumbnail');
+            $thumbnail_image = resizeImage($mainImage,100,100,'thumbnail', true);
             //medium image
-            $medium_image = resizeImage($mainImage,600,600,'medium');
+            $medium_image = resizeImage($mainImage,600,600,'medium', true);
             //large image
-            $large_image = resizeImage($mainImage,600,600,'large');
+            $large_image = resizeImage($mainImage,600,600,'large', true);
             $mainImageSave = uplodImage($mainImage,true);
         }
         if (isset($mainImageSave) && $mainImageSave != '') {
@@ -191,30 +191,51 @@ class ProductsController extends Controller
     /* delete products*/
     public function delete($id)
     {
-        $productDelete = Products::findOrFail($id);
-        if ($productDelete->main_image != null || $productDelete->main_image != '') {
-            $destinationPath = $productDelete->main_image;
-            $fileExists = file_exists($destinationPath);
-            if ($fileExists) {
-                File::delete($destinationPath);
+        DB::beginTransaction();
+        try {
+            $productDelete = Products::findOrFail($id);
+            if ($productDelete->main_image != null || $productDelete->main_image != '') {
+                $destinationPath = $productDelete->main_image;
+                $fileExists = file_exists($destinationPath);
+                if ($fileExists) {
+                    File::delete($destinationPath);
+                }
             }
-        }
-        if ($productDelete->video != null || $productDelete->video != '') {
-            $destinationPath = $productDelete->video;
-            $fileExists = file_exists($destinationPath);
-            if ($fileExists) {
-                File::delete($destinationPath);
+            if ($productDelete->video != null || $productDelete->video != '') {
+                $destinationPath = $productDelete->video;
+                $fileExists = file_exists($destinationPath);
+                if ($fileExists) {
+                    File::delete($destinationPath);
+                }
             }
-        }
-        if ($productDelete->download_datasheet != null || $productDelete->download_datasheet != '') {
-            $destinationPath = $productDelete->download_datasheet;
-            $fileExists = file_exists($destinationPath);
-            if ($fileExists) {
-                File::delete($destinationPath);
+            if ($productDelete->download_datasheet != null || $productDelete->download_datasheet != '') {
+                $destinationPath = $productDelete->download_datasheet;
+                $fileExists = file_exists($destinationPath);
+                if ($fileExists) {
+                    File::delete($destinationPath);
+                }
             }
+            $productDelete->delete();
+            DB::commit();
+            return redirect()->route('products.index')->with('success', 'Products Deleted successfully !!');
+        } catch (\Exception $e) {
+            DB::rollback();
+            return back()->with('error', 'Something Went Wrong.');
         }
-        $productDelete->delete();
-        return redirect()->route('products.index')->with('success', 'Products Deleted successfully !!');
+    }
+
+
+    /**
+     * Delete Multiple Products
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function deleteAll(Request $request)
+    {
+        $ids = $request->ids;
+        dd($ids);
+        // Products::whereIn('id',explode(",",$ids))->delete();
+        return response()->json(['success'=>"Products Deleted successfully."]);
     }
 
     /* edit products information*/
@@ -329,9 +350,9 @@ class ProductsController extends Controller
             if ($req->hasFile('main_image')) {
                 $mainImage = $req->file('main_image');
                 //thumbnail image
-                $thumbnail_image = resizeImage($mainImage,100,100,'thumbnail');
+                $thumbnail_image = resizeImage($mainImage,100,100,'thumbnail', true);
                 //medium image
-                $medium_image = resizeImage($mainImage,300,300,'medium');
+                $medium_image = resizeImage($mainImage,300,300,'medium', true);
                 //large image
                 $large_image = resizeImage($mainImage,600,600,'large',true);
                 $mainImage = uplodImage($mainImage,true);
@@ -873,4 +894,5 @@ class ProductsController extends Controller
         Session::flash('message', 'Successfully delete!');
         return redirect('/admin/products/edit/' . $id . '?tab=9');
     }
+    
 }

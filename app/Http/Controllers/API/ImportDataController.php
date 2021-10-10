@@ -16,7 +16,12 @@ use Illuminate\Support\Facades\Log;
 
 class ImportDataController extends Controller
 {
-    //
+
+    public function __construct()
+    {
+        ini_set('max_execution_time', 600); 
+        ini_set('memory_limit','-1');
+    }
 
     public function vendorImport()
     {

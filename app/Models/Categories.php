@@ -31,12 +31,12 @@ class Categories extends Model
 
     public function children()
     {
-        return  $this->hasMany(Categories::class,'parent_category')->select('id','category_name','parent_category','logo','category_description','slug')->orderby('category_name','ASC');
+        return  $this->hasMany(Categories::class,'parent_category')->select('id','category_name','parent_category','logo','category_description','slug')->orderby('display_order','ASC');
         
     }
     // recursive, loads all descendants
     public function childCategoires()
     {
-     return $this->children()->with('childCategoires');
+     return $this->children()->with('childCategoires')->WHERE('status',1);
     }
 }

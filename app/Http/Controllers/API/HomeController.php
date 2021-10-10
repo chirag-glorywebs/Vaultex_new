@@ -173,8 +173,8 @@ class HomeController extends BaseController
                 ->where('products.status', 1)
                 ->orderBy('id', 'ASC');
 
-                $categoryIds = Categories::where('parent_category', $cat_id)->pluck('id')->all(); 
-                $childCatData = Categories::whereIn('parent_category',$categoryIds)->pluck('id')->all();
+                $categoryIds = Categories::where('parent_category', $cat_id)->where('status', 1)->pluck('id')->all(); 
+                $childCatData = Categories::whereIn('parent_category',$categoryIds)->where('status',1)->pluck('id')->all();
                 $cat_products_query->where(function ($q) use($cat_id, $categoryIds, $childCatData ) { 
                     $q->where('products.category_id',$cat_id)
                     ->orWhereIn('products.category_id',$categoryIds)
@@ -206,8 +206,8 @@ class HomeController extends BaseController
                 $cc_products = null;
                 $cat_id = $cat_data['id'];
                 $cat_products_query = DB::table('products')->select('products.id', 'products.product_name', 'products.sku', 'products.regular_price', 'products.sale_price', 'products.medium_image','products.main_image', 'products.slug')->where('products.status', 1)->take(10)->orderBy('id', 'DESC');
-                $categoryIds = Categories::where('parent_category', $cat_id)->pluck('id')->all(); 
-                $childCatData = Categories::whereIn('parent_category',$categoryIds)->pluck('id')->all();
+                $categoryIds = Categories::where('parent_category', $cat_id)->where('status', 1)->pluck('id')->all(); 
+                $childCatData = Categories::whereIn('parent_category',$categoryIds)->where('status', 1)->pluck('id')->all();
                 $cat_products_query->where(function ($q) use($cat_id, $categoryIds, $childCatData ) { 
                     $q->where('products.category_id',$cat_id)
                     ->orWhereIn('products.category_id',$categoryIds)

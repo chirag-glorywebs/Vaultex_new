@@ -6,6 +6,9 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\Brand;
 use App\Models\Categories;
+use App\Models\ProductDetail;
+use App\Models\ProductAttribute;
+use App\Models\ProductVariantCombination;
 
 class Products extends Model
 {
@@ -26,8 +29,37 @@ class Products extends Model
 
     public function productAttributes()
     {
-        return $this->hasMany(ProductAttribute::class);
+        return $this->hasMany(ProductAttribute::class, 'product_id', 'id');
     }
+
+    public function productDetails()
+    {
+        return $this->hasOne(ProductDetail::class, 'product_id', 'id');
+    }
+
+    public function productVariantCombinations()
+    {
+        return $this->hasMany(ProductVariantCombination::class, 'product_id', 'id');
+
+    }
+
+    /* **********************************************************
+    ** Start - Remove product related data 
+    ********************************************************** */
+    
+    // Declare event handlers
+    public static function boot() {
+        parent::boot();
+        // Before delete Product, Remove all related data
+        static::deleting(function($product) { 
+            $product->productDetails()->delete();
+            $product->productAttributes()->delete();
+            $product->productVariantCombinations()->delete();
+        });
+    }
+    /* **********************************************************
+    ** End - Remove product related data
+    ********************************************************** */
 
     public function filterProducts()
     {

@@ -27,7 +27,7 @@ function slugify($slug)
 }
 
 function uplodImage($blogImage, $watermark = false)
-{ 
+{
     $watermarkImageName = 'watermark-large.png';
     $year = 'uploads/' . date('Y');
     $destinationPath =  $year. '/' . date('m');
@@ -146,11 +146,11 @@ function resizeImageByURL($url,$width,$height,$type, $watermark = false)
     $destinationPath =  $year. '/' . date('m');
     if(file_exists($year)){
         if(file_exists($destinationPath)==false){
-            mkdir($destinationPath,777, true);
+            mkdir($destinationPath,0777, true);
             }
     }else{
-        mkdir($year, 777,true);
-        mkdir($destinationPath,777, true);
+        mkdir($year, 0777,true);
+        mkdir($destinationPath,0777, true);
     }
     $info = pathinfo($url); 
     $splitBlogImage = explode('.', $info['basename']);
@@ -279,23 +279,41 @@ function paymentsMenthods()
 
 function waterMarkImage($mainImage, $watermark_path)
 {
-    $watermarkImg = Image::make($watermark_path);
+    $watermark =  Image::make($watermark_path);
     $imgFile = Image::make($mainImage);
-    $wmarkWidth=$watermarkImg->width();
-    $wmarkHeight=$watermarkImg->height();
-    $imgWidth=$imgFile->width();
-    $imgHeight=$imgFile->height();
-    $x=0;
-    $y=0;
-    $imgFile->insert($watermark_path,'center',$x,$y);
-    // while($y<=$imgHeight){
-    //     $imgFile->insert($watermark_path,'center',$x,$y);
-    //     $x+=$wmarkWidth;
-    //     if($x>=$imgWidth){
-    //         $x=0;
-    //         $y+=$wmarkHeight;
-    //     }
-    // }
+    //#1
+    $watermarkSize = $imgFile->width() - 20; //size of the image minus 20 margins
+    //#2
+    $watermarkSize = $imgFile->width() / 2; //half of the image size
+    //#3
+    $resizePercentage = 40;//40% less then an actual image (play with this value)
+    $watermarkSize = round($imgFile->width() * ((100 - $resizePercentage) / 100), 2); //watermark will be $resizePercentage less then the actual width of the image
+
+    // resize watermark width keep height auto
+    $watermark->resize($watermarkSize, null, function ($constraint) {
+        $constraint->aspectRatio();
+    });
+    //insert resized watermark to image center aligned
+    $imgFile->insert($watermark, 'center');
+   
+
+    // $watermarkImg = Image::make($watermark_path);
+    // $imgFile = Image::make($mainImage);
+    // $wmarkWidth=$watermarkImg->width();
+    // $wmarkHeight=$watermarkImg->height();
+    // $imgWidth=$imgFile->width();
+    // $imgHeight=$imgFile->height();
+    // $x=0;
+    // $y=0;
+    // $imgFile->insert($watermark_path,'center',$x,$y);
+    // // while($y<=$imgHeight){
+    // //     $imgFile->insert($watermark_path,'center',$x,$y);
+    // //     $x+=$wmarkWidth;
+    // //     if($x>=$imgWidth){
+    // //         $x=0;
+    // //         $y+=$wmarkHeight;
+    // //     }
+    // // }
     return $imgFile;  
 }
 
