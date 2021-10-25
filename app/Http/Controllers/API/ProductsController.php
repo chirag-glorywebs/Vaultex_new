@@ -998,34 +998,36 @@ class ProductsController extends BaseController
 
     public function truncateProductTables()
     {
-        $tables = [
-            // Product Imported Tables
-            'attributes_variations',
-            'product_details',
-            'product_attributes',
-            'product_variant_combinations',
-            'products',
-            // Product Related Tables
-            'product_feature_videos',
-            'product_training_videos',
-            'user_product_videos',
-            'liked_products',
-            'orders',
-            'order_products',
-            'order_product_attributes',
-            'manage_order_status',
-            'customers_basket',
-            'customers_basket_attributes'
-        ];
+        // $tables = [
+        //     // Product Imported Tables
+        //     'attributes_variations',
+        //     'product_details',
+        //     'product_attributes',
+        //     'product_variant_combinations',
+        //     'products',
+        //     // Product Related Tables
+        //     'product_feature_videos',
+        //     'product_training_videos',
+        //     'user_product_videos',
+        //     'liked_products',
+        //     'orders',
+        //     'order_products',
+        //     'order_product_attributes',
+        //     'manage_order_status',
+        //     'customers_basket',
+        //     'customers_basket_attributes',
+        //     'price_lists'
+        // ];
 
-        // It do truncate given array tables in database
-        $arr = [];
-        DB::statement('SET FOREIGN_KEY_CHECKS=0;');
-        foreach($tables as $table){
-            $arr[$table] = DB::table($table)->truncate();            
-        }
-        DB::statement('SET FOREIGN_KEY_CHECKS=1;');
-        return $this->sendResponse($arr, 'Data Truncated.');
+        // // It do truncate given array tables in database
+        // $arr = [];
+        // DB::statement('SET FOREIGN_KEY_CHECKS=0;');
+        // foreach($tables as $table){
+        //     $arr[$table] = DB::table($table)->truncate();            
+        // }
+        // $arr['vendor_deleted'] =  DB::table('users')->where('user_role', 3)->DELETE();
+        // DB::statement('SET FOREIGN_KEY_CHECKS=1;');
+        // return $this->sendResponse($arr, 'Data Truncated.');
     }
 
     public function exportProductData()
