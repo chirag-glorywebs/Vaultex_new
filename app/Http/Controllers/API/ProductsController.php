@@ -18,6 +18,7 @@ use App\Models\Categories;
 use App\Models\Order_products;
 use App\Models\Settings;
 use Illuminate\Support\Arr;
+use Response;
 
 class ProductsController extends BaseController
 {
@@ -993,5 +994,211 @@ class ProductsController extends BaseController
             }
         }
     }
+
+
+    public function truncateProductTables()
+    {
+        $tables = [
+            // Product Imported Tables
+            'attributes_variations',
+            'product_details',
+            'product_attributes',
+            'product_variant_combinations',
+            'products',
+            // Product Related Tables
+            'product_feature_videos',
+            'product_training_videos',
+            'user_product_videos',
+            'liked_products',
+            'orders',
+            'order_products',
+            'order_product_attributes',
+            'manage_order_status',
+            'customers_basket',
+            'customers_basket_attributes'
+        ];
+
+        // It do truncate given array tables in database
+        $arr = [];
+        DB::statement('SET FOREIGN_KEY_CHECKS=0;');
+        foreach($tables as $table){
+            $arr[$table] = DB::table($table)->truncate();            
+        }
+        DB::statement('SET FOREIGN_KEY_CHECKS=1;');
+        return $this->sendResponse($arr, 'Data Truncated.');
+    }
+
+    public function exportProductData()
+    {
+
+        $headers = [
+            'Cache-Control'       => 'must-revalidate, post-check=0, pre-check=0',
+            'Content-type'        => 'text/csv',
+            'Content-Disposition' => 'attachment; filename=exported-products.csv',
+            'Expires'             => '0',
+            'Pragma'              => 'public'
+        ];        
+
+        $list = Products::SELECT(
+            'products.sku', 
+            'products.product_name',
+            'products.description',
+            'products.short_description',
+            'categories.category_name as category_id',
+            'brands.brand_name as brand_id',
+            DB::raw("'' as main_image"),
+            'products.regular_price',
+            'products.sale_price',
+            'products.Inventory',
+            'products.IsCommited',
+            'products.OnOrder',
+            'products.specification',
+            'products.tech_documents',
+            'products.video',
+            DB::raw("'' as gallery"),
+            DB::raw("'' as download_datasheet"),
+            // DB::raw("(GROUP_CONCAT(product_attributes.attribute_variation_id SEPARATOR '|')) as Attributes"),
+            // DB::raw("(GROUP_CONCAT(attributes.attribute_name SEPARATOR '|')) as attributeName"),
+            // DB::raw("(GROUP_CONCAT(product_attributes.attribute_variation_id SEPARATOR '|')) as attributesVariantName"),
+            DB::raw('CONCAT(GROUP_CONCAT(attributes.attribute_name), \'|\', GROUP_CONCAT(product_attributes.attribute_variation_id)) as Attributes'),
+            // DB::raw('CONCAT("attribute_name", variation_name) AS Attributes'),
+            // DB::raw("'' as Attributes"),
+            // DB::raw("(GROUP_CONCAT(attributes_variations.variation_name SEPARATOR '|')) as Attributes"),
+            'products.packaging_delivery_descr',
+            'products.packaging_delivery_images',
+            'products.trending_product',
+            'products.best_selling',
+            'products.bid_quote',
+            'products.seo_title',
+            'products.seo_description',
+            'products.seo_keyword',
+            'products.status',
+            'product_details.VatGourpSa',
+            'product_details.VatGroupPu',
+            'product_details.U_Size',
+            'product_details.SizeName',
+            'product_details.U_SCartQty',
+            'product_details.U_CBM',
+            'product_details.OnHand',
+            'product_details.U_Itemgrp',
+            'product_details.U_Itemgrpname',
+            'product_details.U_OrgCountCod',
+            'product_details.U_OrgCountNam',
+            'product_details.U_CartQty',
+            'product_details.SuppCatNum',
+            'product_details.BuyUnitMsr',
+            'product_details.SalUnitMsr',
+            'product_details.FirmCode',
+            'product_details.FirmName',
+            'product_details.U_HsCode',
+            'product_details.U_HsName',
+            'product_details.QryGroup1',
+            'product_details.QryGroup2',
+            'product_details.QryGroup3',
+            'product_details.QryGroup4',
+            'product_details.QryGroup5',
+            'product_details.QryGroup6',
+            'product_details.QryGroup7',
+            'product_details.QryGroup8',
+            'product_details.QryGroup9',
+            'product_details.QryGroup10',
+            'product_details.QryGroup11',
+            'product_details.QryGroup12',
+            'product_details.QryGroup13',
+            'product_details.QryGroup14',
+            'product_details.QryGroup15',
+            'product_details.QryGroup16',
+            'product_details.QryGroup17',
+            'product_details.QryGroup18',
+            'product_details.QryGroup19',
+            'product_details.QryGroup20',
+            'product_details.QryGroup21',
+            'product_details.QryGroup22',
+            'product_details.QryGroup23',
+            'product_details.QryGroup24',
+            'product_details.QryGroup25',
+            'product_details.QryGroup26',
+            'product_details.QryGroup27',
+            'product_details.QryGroup28',
+            'product_details.QryGroup29',
+            'product_details.QryGroup30',
+            'product_details.QryGroup31',
+            'product_details.QryGroup32',
+            'product_details.QryGroup33',
+            'product_details.QryGroup34',
+            'product_details.QryGroup35',
+            'product_details.QryGroup36',
+            'product_details.QryGroup37',
+            'product_details.QryGroup38',
+            'product_details.QryGroup39',
+            'product_details.QryGroup40',
+            'product_details.QryGroup41',
+            'product_details.QryGroup42',
+            'product_details.QryGroup43',
+            'product_details.QryGroup44',
+            'product_details.QryGroup45',
+            'product_details.QryGroup46',
+            'product_details.QryGroup47',
+            'product_details.QryGroup48',
+            'product_details.QryGroup49',
+            'product_details.QryGroup50',
+            'product_details.QryGroup51',
+            'product_details.QryGroup52',
+            'product_details.QryGroup53',
+            'product_details.QryGroup54',
+            'product_details.QryGroup55',
+            'product_details.QryGroup56',
+            'product_details.QryGroup57',
+            'product_details.QryGroup58',
+            'product_details.QryGroup59',
+            'product_details.QryGroup60',
+            'product_details.QryGroup61',
+            'product_details.QryGroup62',
+            'product_details.QryGroup63',
+            'product_details.QryGroup64'
+            )
+            ->leftJoin('product_details', 'product_details.product_id', '=', 'products.id')
+            ->leftJoin('categories', 'categories.id', '=', 'products.category_id')
+            ->leftJoin('brands', 'brands.id', '=', 'products.brand_id')
+            ->leftJoin('product_attributes', 'product_attributes.product_id', '=', 'products.id')
+            ->join('attributes', 'attributes.id', '=', 'product_attributes.attribute_id')
+            // ->leftJoin('attributes_variations', 'attributes_variations.attribute_id', '=', 'attributes.id')
+            ->groupBy('products.id')
+            ->GET()
+            ->toArray();
+
+
+        if(count($list) > 0){
+
+            // For display Attributes with CSV formatted
+            foreach ($list as $listkey => $updatedData) {                   
+                $attributes = explode('|', $updatedData['Attributes']);
+                $attributesNameArr = explode(',', $attributes[0]);
+                $attributesVariantArr = explode(',', $attributes[1]);
+                $allAttributesArr = [];
+                foreach ($attributesNameArr as $key => $attrName) {
+                    $allAttributesArr[] = $attrName.'>'.$attributesVariantArr[$key];
+                }
+                $list[$listkey]['Attributes'] = (implode('|', $allAttributesArr));
+            }
+
+            # add headers for each column in the CSV download
+            array_unshift($list, array_keys($list[0]));
+      
+            $callback = function() use ($list) 
+            {
+                $FH = fopen('php://output', 'w');
+                foreach ($list as $row) {                   
+                    fputcsv($FH, $row);
+                }
+                fclose($FH);
+            };
+
+            return Response::stream($callback, 200, $headers);
+        } else {
+            return $this->sendResponse([], 'No Data Available.');
+        }
+    }
+
         
 }

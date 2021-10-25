@@ -27,15 +27,22 @@ use File;
 
 class ImportController extends Controller
 {
+
+    public function __construct()
+    {
+        ini_set('max_execution_time', 600); 
+        ini_set('memory_limit','-1');
+    }
+    
     public function index()
     {
         $page_title = 'Products Import';
         $page_description = 'Products Import List';
         return view('admin.import.import_form', compact('page_title', 'page_description'));
     }
-    public  function getUniqueSlug($tableName,$name)
+    public  function getUniqueSlug($tableName, $name)
     {
-         
+
         $slugCount = 0;
         $slug = $name;
         do {
@@ -44,20 +51,21 @@ class ImportController extends Controller
             } else {
                 $currentSlug = slugify($name . '-' . $slugCount);
             }
-            if ( DB::table($tableName)->select('id')->where('slug','=',$currentSlug)->first()){
+            if (DB::table($tableName)->select('id')->where('slug', '=', $currentSlug)->first()) {
                 $slugCount++;
             } else {
                 $slug = $currentSlug;
                 $slugCount = 0;
             }
         } while ($slugCount > 0);
-      return $slug;  
+        return $slug;
     }
     public function importCsv(Request $request)
     {
 
-        try {   
-            $this->validate($request,
+        try {
+            $this->validate(
+                $request,
                 ['products_import' => 'required']
             );
             $importModel = new Products();
@@ -66,13 +74,13 @@ class ImportController extends Controller
             $tempName = $file->getPathName();
             $fileExtension = $file->getClientOriginalExtension();
             $errors = $file->getError();
-            
             if ($errors == 0) {
                 if (($fileExtension == "csv") && (!empty($tempName))) {
                     $i = 0;
                     $delimiter = ',';
                     $data = [];
                     $headersArray = [];
+
                     if (($handle = fopen($tempName, 'r')) !== false) {
                         while (($row = fgetcsv($handle, 0, $delimiter)) !== false) {
                             $row = array_map("utf8_encode", $row);
@@ -80,15 +88,16 @@ class ImportController extends Controller
                                 $headersArray = $row;
                             }
                             $importArrayKeys = array_keys($importModel->import['fields']);
-                            
+
                             if ($i != 0) {
 
                                 if (count($row) == count($row)) {
 
                                     foreach ($row as $key => $value) {
-                                            
+
                                         if (isset($value)) {
-                                            if (in_array('sku', $headersArray)
+                                            if (
+                                                in_array('sku', $headersArray)
                                                 && in_array('product_name', $headersArray)
                                                 && in_array('description', $headersArray)
                                                 && in_array('short_description', $headersArray)
@@ -200,8 +209,7 @@ class ImportController extends Controller
                                                 && in_array('QryGroup64', $headersArray)
                                             ) {
                                                 $data[$i][$importArrayKeys[$key]] = $value;
-                                            } 
-                                            else {
+                                            } else {
                                                 Session::flash('message', 'Column mismatch Error.');
                                                 return redirect('/admin/import');
                                             }
@@ -214,12 +222,12 @@ class ImportController extends Controller
 
                         fclose($handle);
                     }
-                
+                    
                     $length = count($data);
                     $totalInsert = 0;
                     $totalError = 0;
-                    $totalUpdate= 0;
-                    
+                    $totalUpdate = 0;
+
                     $fileNotValid = 0;
                     if ($length != 0) {
                         for ($i = 1; $i <= $length; $i++) {
@@ -247,7 +255,7 @@ class ImportController extends Controller
                                 $trending_product = trim($data[$i]['trending_product']);
                                 $best_selling = trim($data[$i]['best_selling']);
                                 $bid_quote = trim($data[$i]['bid_quote']);
-                                
+
                                 $seo_title = trim($data[$i]['seo_title']);
                                 $seo_description = trim($data[$i]['seo_description']);
                                 $seo_keyword = trim($data[$i]['seo_keyword']);
@@ -338,34 +346,34 @@ class ImportController extends Controller
                             } catch (\Exception $e) {
                                 $fileNotValid = 1;
                             }
+                            $model = Products::where('sku', $sku)->first();
 
-                        $model = Products::where('sku', $sku)->first();
-                            if (!empty($model)){
-                                
-                                if(!empty($description)){
+                            if (!empty($model)) {
+
+                                if (!empty($description)) {
                                     $model->description = $description;
                                 }
-                                if(!empty($description)){
+                                if (!empty($description)) {
                                     $model->short_description = $short_description;
                                 }
-                                if(!empty($regular_price)){
+                                if (!empty($regular_price)) {
                                     $model->regular_price = $regular_price;
                                 }
-                                if(!empty($sale_price)){
+                                if (!empty($sale_price)) {
                                     $model->sale_price = $sale_price;
                                 }
-                                if(!empty($specification)){
+                                if (!empty($specification)) {
                                     $model->specification = $specification;
                                 }
-                                
+
                                 $model->seo_title = $seo_title;
                                 $model->seo_description = $seo_description;
                                 $model->seo_keyword = $seo_keyword;
-                               
-                                if(!empty($main_image)){
+
+                                if (!empty($main_image)) {
                                     if (!empty($model->main_image)) {
                                         $destinationPath = $model->main_image;
-                                        $fileExists = file_exists($destinationPath);                                        
+                                        $fileExists = file_exists($destinationPath);
                                         if ($fileExists) {
                                             // unlink($destinationPath);
                                             File::delete($destinationPath);
@@ -396,15 +404,15 @@ class ImportController extends Controller
                                         }
                                     }
                                     //medium image
-                                    $model->thumbnail_image = resizeImageByURL($main_image,100,100,'thumbnail');
+                                    $model->thumbnail_image = resizeImageByURL($main_image, 100, 100, 'thumbnail');
                                     //medium image
-                                    $model->medium_image = resizeImageByURL($main_image,300,300,'medium');
+                                    $model->medium_image = resizeImageByURL($main_image, 300, 300, 'medium', true);
                                     //large image
-                                    $model->large_image = resizeImageByURL($main_image,600,600,'large',true);
-                                $model->main_image  = uplodImageByURL($main_image,true);
+                                    $model->large_image = resizeImageByURL($main_image, 600, 600, 'large', true);
+                                    $model->main_image  = uplodImageByURL($main_image, true);
                                 }
 
-                                if(!empty($video)){
+                                if (!empty($video)) {
                                     if (!empty($model->video)) {
                                         $destinationPath = $model->video;
                                         $fileExists = file_exists($destinationPath);
@@ -416,7 +424,7 @@ class ImportController extends Controller
                                     $model->video  = uplodImageByURL($video);
                                 }
 
-                                if(!empty($download_datasheet)){
+                                if (!empty($download_datasheet)) {
                                     if (!empty($model->download_datasheet)) {
                                         $destinationPath = $model->download_datasheet;
                                         $fileExists = file_exists($destinationPath);
@@ -427,18 +435,19 @@ class ImportController extends Controller
                                     }
                                     $model->download_datasheet  = uplodImageByURL($download_datasheet);
                                 }
-                                
-                                $explodeCats = explode('>', $category_id );
+
+                                $explodeCats = explode('>', $category_id);
                                 $parentid = 0;
-                                foreach($explodeCats as $cat){
+
+                                foreach ($explodeCats as $cat) {
                                     $catData = Categories::where('category_name', trim($cat))->first('id');
-                                    if(!empty( $catData)){
+                                    if (!empty($catData)) {
                                         $catId = $catData->id;
                                         $parentid = $catData->id;
-                                    }else{
+                                    } else {
                                         $newCat = new Categories;
                                         $newCat->category_name = $cat;
-                                        if(!empty( $parentid)){
+                                        if (!empty($parentid)) {
                                             $newCat->parent_category = $parentid;
                                         }
                                         $newCat->slug = $this->getUniqueSlug('categories', $cat);
@@ -447,13 +456,13 @@ class ImportController extends Controller
                                         $parentid = $newCat->id;
                                     }
                                 }
-                            $model->category_id = $catId;
+                                $model->category_id = $catId;
 
-                            
+
                                 $brandData = Brand::where('brand_name', $brand_id)->first('id');
-                                if(!empty( $brandData)){
+                                if (!empty($brandData)) {
                                     $brandId = $brandData->id;
-                                }else{
+                                } else {
                                     $newBrand = new Brand;
                                     $newBrand->brand_name = $brand_id;
                                     $newBrand->save();
@@ -462,98 +471,98 @@ class ImportController extends Controller
                                 $model->brand_id = $brandId;
 
                                 $tech_docs = array();
-                                if(!empty($tech_documents)){
+                                if (!empty($tech_documents)) {
                                     if (!empty($model->tech_documents)) {
                                         $exited_techdocs =  explode(',', $model->tech_documents);
-                                    if(!empty($exited_techdocs)){
-                                        foreach($exited_techdocs as $destinationPath){
-                                            $fileExists = file_exists($destinationPath);
-                                            if ($fileExists) {
-                                                // unlink($destinationPath);
-                                                File::delete($destinationPath);
+                                        if (!empty($exited_techdocs)) {
+                                            foreach ($exited_techdocs as $destinationPath) {
+                                                $fileExists = file_exists($destinationPath);
+                                                if ($fileExists) {
+                                                    // unlink($destinationPath);
+                                                    File::delete($destinationPath);
+                                                }
                                             }
                                         }
                                     }
-                                    
-                                    } 
 
                                     $tech_documentsArr =  explode('|', $tech_documents);
-                                    foreach($tech_documentsArr as $doc){
+                                    foreach ($tech_documentsArr as $doc) {
                                         $tech_docs[] = uplodImageByURL($doc);
                                     }
-                                }  
-
-                                if(!empty($tech_docs)){
-                                    $model->tech_documents = implode(',', $tech_docs);  
                                 }
 
-                            $gallery_names = array();
-                            if(!empty($gallery)){
+                                if (!empty($tech_docs)) {
+                                    $model->tech_documents = implode(',', $tech_docs);
+                                }
+
+                                $gallery_names = array();
+                                if (!empty($gallery)) {
                                     if (!empty($model->gallery)) {
                                         $exited_gallery =  explode(',', $model->gallery);
-                                    if(!empty($exited_gallery)){
-                                        foreach($exited_gallery as $destinationPath){
-                                            $fileExists = file_exists($destinationPath);
-                                            if ($fileExists) {
-                                                // unlink($destinationPath);
-                                                File::delete($destinationPath);
+                                        if (!empty($exited_gallery)) {
+                                            foreach ($exited_gallery as $destinationPath) {
+                                                $fileExists = file_exists($destinationPath);
+                                                if ($fileExists) {
+                                                    // unlink($destinationPath);
+                                                    File::delete($destinationPath);
+                                                }
                                             }
                                         }
-                                    }
                                     }
 
                                     $galleryArr =  explode('|', $gallery);
-                                    foreach($galleryArr as $image){
-                                        $gallery_names[] = uplodImageByURL($image,true);
+                                    foreach ($galleryArr as $image) {
+                                        $gallery_names[] = uplodImageByURL($image, true);
                                     }
-                                }   
-                                if(!empty($gallery_names)){
-                                $model->gallery = implode(',', $gallery_names);  
                                 }
-
+                                if (!empty($gallery_names)) {
+                                    $model->gallery = implode(',', $gallery_names);
+                                }
+                                
                                 /* packaging  */
-                                if(!empty($packaging_delivery_descr)){
-                                    $model->packaging_delivery_descr = $packaging_delivery_descr; 
+                                if (!empty($packaging_delivery_descr)) {
+                                    $model->packaging_delivery_descr = $packaging_delivery_descr;
                                 }
                                 $pd_names = array();
-                                if(!empty($packaging_delivery_images)){
+                                if (!empty($packaging_delivery_images)) {
                                     if (!empty($model->packaging_delivery_images)) {
                                         $exited_pdImages =  explode(',', $model->packaging_delivery_images);
-                                    if(!empty($exited_pdImages)){
-                                        foreach($exited_pdImages as $destinationPath){
-                                            $fileExists = file_exists($destinationPath);
-                                            if ($fileExists) {
-                                                // unlink($destinationPath);
-                                                File::delete($destinationPath);
+                                        if (!empty($exited_pdImages)) {
+                                            foreach ($exited_pdImages as $destinationPath) {
+                                                $fileExists = file_exists($destinationPath);
+                                                if ($fileExists) {
+                                                    // unlink($destinationPath);
+                                                    File::delete($destinationPath);
+                                                }
                                             }
                                         }
                                     }
-                                    }
                                     $pdImageArr =  explode('|', $packaging_delivery_images);
-                                    foreach($pdImageArr as $image){
+                                    foreach ($pdImageArr as $image) {
                                         $pd_names[] = uplodImageByURL($image);
                                     }
-                                }  
-                                if(!empty($pd_names)){
-                                    $model->packaging_delivery_images = implode(',', $pd_names);  
                                 }
-                            
+                                if (!empty($pd_names)) {
+                                    $model->packaging_delivery_images = implode(',', $pd_names);
+                                }
+
                                 $model->trending_product = ($trending_product) ? $trending_product : 0;
                                 $model->best_selling = ($best_selling) ? $best_selling : 0;
                                 $model->bid_quote = ($bid_quote) ? $bid_quote : 0;
                                 $model->save();
+                                // if (!in_array($model->sku, ['MDU', 'UBA', 'SGT', 'SGK'])){
+                                //     dd($model->sku);
+                                // }
                                 $totalUpdate++;
-                            }else{
+                            } else {
                                 $totalInsert++;
                             }
-
                         }
-                        $message = 'Successfully updated '.$totalUpdate.', and skipped  '.$totalInsert.' from the total of '.$length.'  records!';
+                        $message = 'Successfully updated ' . $totalUpdate . ', and skipped  ' . $totalInsert . ' from the total of ' . $length . '  records!';
 
                         Session::flash('message',  $message);
                         return redirect('/admin/import');
-                    } 
-                    else{
+                    } else {
                         Session::flash('message', 'Error occured');
                         return redirect('/admin/import');
                     }
@@ -562,21 +571,21 @@ class ImportController extends Controller
                     return redirect('/admin/import');
                 }
             }
-        } catch(\Exception $e){
+        } catch (\Exception $e) {
             // Session::flash('message', $e->getLine().' - '.$e->getFile().' - '.$e->getMessage());
             Session::flash('message', 'Something went wrong.');
             return redirect('/admin/import');
-
         }
     }
 
     public function faqImportCsv(Request $request)
     {
 
-        try{
-            $this->validate($request,
+        try {
+            $this->validate(
+                $request,
                 ['faq_file' => 'required']
-            ); 
+            );
             $faqImportModel = new Faqs();
             $file = request()->file('faq_file');
             $tempName = $file->getPathName();
@@ -595,12 +604,13 @@ class ImportController extends Controller
                                 $headersArray = $row;
                             }
                             $importArrayKeys = array_keys($faqImportModel->import['fields']);
-                        
+
                             if ($i != 0) {
                                 if (count($row) == count($row)) {
                                     foreach ($row as $key => $value) {
                                         if (isset($value)) {
-                                            if (in_array('sku', $headersArray)
+                                            if (
+                                                in_array('sku', $headersArray)
                                                 && in_array('title', $headersArray)
                                                 && in_array('description', $headersArray)
                                             ) {
@@ -617,7 +627,7 @@ class ImportController extends Controller
                     $length = count($data);
                     $totalInsert = 0;
                     $totalError = 0;
-                    $totalUpdate= 0;
+                    $totalUpdate = 0;
                     $fileNotValid = 0;
                     if ($length != 0) {
                         for ($i = 1; $i <= $length; $i++) {
@@ -632,34 +642,32 @@ class ImportController extends Controller
                             $trimTitle = trim($title);
                             $trimDesc = trim($description);
                             $productData = Products::where('sku', $trimSKU)->first('id');
-                            if (!empty($productData) && !empty( $trimTitle)){
+                            if (!empty($productData) && !empty($trimTitle)) {
                                 $trimProid = $productData->id;
                                 $faqData = Faqs::where('title', $trimTitle)->where('proid', $trimProid)->first('id');
-                                if(!empty( $faqData)){
+                                if (!empty($faqData)) {
                                     $faqData->title =  $trimTitle;
                                     $faqData->description =  $trimDesc;
                                     $faqData->save();
-                                    $totalUpdate ++;
-                                }else{
+                                    $totalUpdate++;
+                                } else {
                                     $newFAQ = new Faqs;
                                     $newFAQ->title =  $trimTitle;
                                     $newFAQ->description =  $trimDesc;
                                     $newFAQ->proid =  $trimProid;
                                     $newFAQ->save();
-                                    $totalInsert ++;
+                                    $totalInsert++;
                                 }
-
-                            }else{
-                                $totalError ++;
+                            } else {
+                                $totalError++;
                             }
-                        
                         }
-                        
-                        $message = 'Successfully inserted '.$totalInsert.', updated '.$totalUpdate.', and skipped  '.$totalError.' from the total of '.$length.'  records!';
+
+                        $message = 'Successfully inserted ' . $totalInsert . ', updated ' . $totalUpdate . ', and skipped  ' . $totalError . ' from the total of ' . $length . '  records!';
 
                         Session::flash('message',  $message);
                         return redirect('/admin/import');
-                    } else{
+                    } else {
                         Session::flash('message', 'Error occured');
                         return redirect('/admin/import');
                     }
@@ -668,7 +676,7 @@ class ImportController extends Controller
                     return redirect('/admin/import');
                 }
             }
-        } catch(\Exception $e){
+        } catch (\Exception $e) {
             Session::flash('message', 'Something went wrong.');
             // Session::flash('message', $e->getLine().' - '.$e->getMessage());
             return redirect('/admin/import');
@@ -677,117 +685,127 @@ class ImportController extends Controller
 
     public function trainingVideoImportCsv(Request $request)
     {
-        $this->validate($request,
-            ['training_video_file' => 'required']
-        );
-        $trainingVideoModel = new Product_training_videos();
-        $file = request()->file('training_video_file');
-        $tempName = $file->getPathName();
-        $fileExtension = $file->getClientOriginalExtension();
-        $errors = $file->getError();
 
-        if ($errors == 0) {
-            if (($fileExtension == "csv") && (!empty($tempName))) {
-                $i = 0;
-                $delimiter = ',';
-                $data = [];
-                $headersArray = [];
-                if (($handle = fopen($tempName, 'r')) !== false) {
-                    while (($row = fgetcsv($handle, 0, $delimiter)) !== false) {
-                        $row = array_map("utf8_encode", $row);
-                        if ($i == 0) {
-                            $headersArray = $row;
-                        }
-                        $importArrayKeys = array_keys($trainingVideoModel->import['fields']);
-                        if ($i != 0) {
-                            if (count($row) == count($row)) {
-                                foreach ($row as $key => $value) {
-                                    if (isset($value)) {
-                                        if (in_array('sku', $headersArray)
-                                            && in_array('name', $headersArray)
-                                            && in_array('video', $headersArray)
-                                        ) {
-                                            $data[$i][$importArrayKeys[$key]] = $value;
+        try{
+
+            $this->validate(
+                $request,
+                ['training_video_file' => 'required']
+            );
+            $trainingVideoModel = new Product_training_videos();
+            $file = request()->file('training_video_file');
+            $tempName = $file->getPathName();
+            $fileExtension = $file->getClientOriginalExtension();
+            $errors = $file->getError();
+
+            if ($errors == 0) {
+                if (($fileExtension == "csv") && (!empty($tempName))) {
+                    $i = 0;
+                    $delimiter = ',';
+                    $data = [];
+                    $headersArray = [];
+                    if (($handle = fopen($tempName, 'r')) !== false) {
+                        while (($row = fgetcsv($handle, 0, $delimiter)) !== false) {
+                            $row = array_map("utf8_encode", $row);
+                            if ($i == 0) {
+                                $headersArray = $row;
+                            }
+                            $importArrayKeys = array_keys($trainingVideoModel->import['fields']);
+                            if ($i != 0) {
+                                if (count($row) == count($row)) {
+                                    foreach ($row as $key => $value) {
+                                        if (isset($value)) {
+                                            if (
+                                                in_array('sku', $headersArray)
+                                                && in_array('name', $headersArray)
+                                                && in_array('video', $headersArray)
+                                            ) {
+                                                $data[$i][$importArrayKeys[$key]] = $value;
+                                            }
                                         }
                                     }
                                 }
                             }
+                            $i++;
                         }
-                        $i++;
+                        fclose($handle);
                     }
-                    fclose($handle);
-                }
-                $length = count($data);
-                $totalInsert = 0;
-                $totalError = 0;
-                $totalUpdate= 0;
-                $fileNotValid = 0;
-                if ($length != 0) {
-                    for ($i = 1; $i <= $length; $i++) {
-                        try {
-                            $sku = $data[$i]['sku'];
-                            $name = $data[$i]['name'];
-                            $video = $data[$i]['video'];
-                        } catch (\Exception $e) {
-                            $fileNotValid = 1;
-                        }
-                        $trimSKU = trim($sku);
-                        $trimName = trim($name);
-                        $trimvideo = trim($video);
 
-                        $productData = Products::where('sku', $trimSKU)->first('id');
-                        if (!empty($productData)  && !empty( $trimName)  && !empty( $trimvideo)){
-                            $trimvideoProid = $productData->id;
-                           
-                            $trainingVideoData = Product_training_videos::where('name', $trimName)->where('proid', $trimvideoProid)->first();
-                            
-                            if(!empty( $trainingVideoData)){
-                               
-                                $trainingVideoData->name = $trimName;
-                                if (!empty($trainingVideoData->video)) {
-                                    $destinationPath = $trainingVideoData->video;
-                                    $fileExists = file_exists($destinationPath);
-                                    if ($fileExists) {
-                                        // unlink($destinationPath);
-                                        File::delete($destinationPath);
-                                    }
-                                }
-                               if(!empty($trimvideo)){
-                                    $trainingVideoData->video  = uplodImageByURL($trimvideo);
-                                }
-                                $trainingVideoData->save();
-                                $totalUpdate++;
-                            }else{
-                                $newTV = new Product_training_videos;
-                                $newTV->name =  $trimName;
-                                if(!empty($trimvideo)){
-                                    $newTV->video  = uplodImageByURL($trimvideo);
-                                }
-                                $newTV->proid =  $trimvideoProid;
-                                $newTV->save();
-                                $totalInsert++;
+                    $length = count($data);
+                    $totalInsert = 0;
+                    $totalError = 0;
+                    $totalUpdate = 0;
+                    $fileNotValid = 0;
+                    if ($length != 0) {
+                        for ($i = 1; $i <= $length; $i++) {
+                            try {
+                                $sku = $data[$i]['sku'];
+                                $name = $data[$i]['name'];
+                                $video = $data[$i]['video'];
+                            } catch (\Exception $e) {
+                                $fileNotValid = 1;
                             }
-                          
-                        }else{
-                            $totalError++;
+                            $trimSKU = trim($sku);
+                            $trimName = trim($name);
+                            $trimvideo = trim($video);
+
+                            $productData = Products::where('sku', $trimSKU)->first('id');
+                            if (!empty($productData)  && !empty($trimName)  && !empty($trimvideo)) {
+                                $trimvideoProid = $productData->id;
+
+                                $trainingVideoData = Product_training_videos::where('name', $trimName)->where('proid', $trimvideoProid)->first();
+
+                                if (!empty($trainingVideoData)) {
+
+                                    $trainingVideoData->name = $trimName;
+                                    if (!empty($trainingVideoData->video)) {
+                                        $destinationPath = $trainingVideoData->video;
+                                        $fileExists = file_exists($destinationPath);
+                                        if ($fileExists) {
+                                            // unlink($destinationPath);
+                                            File::delete($destinationPath);
+                                        }
+                                    }
+                                    if (!empty($trimvideo)) {
+                                        $trainingVideoData->video  = uplodImageByURL($trimvideo);
+                                    }
+                                    $trainingVideoData->save();
+                                    $totalUpdate++;
+                                } else {
+                                    $newTV = new Product_training_videos;
+                                    $newTV->name =  $trimName;
+                                    if (!empty($trimvideo)) {
+                                        $newTV->video  = uplodImageByURL($trimvideo);
+                                    }
+                                    $newTV->proid =  $trimvideoProid;
+                                    $newTV->save();
+                                    $totalInsert++;
+                                }
+                            } else {
+                                $totalError++;
+                            }
                         }
-                      
+                        $message = 'Successfully inserted ' . $totalInsert . ', updated ' . $totalUpdate . ', and skipped  ' . $totalError . ' from the total of ' . $length . '  records!';
+
+                        Session::flash('message',  $message);
+                        return redirect('/admin/import');
+                    } else {
+                        Session::flash('message', 'Error occured');
+                        return redirect('/admin/import');
                     }
-                    $message = 'Successfully inserted '.$totalInsert.', updated '.$totalUpdate.', and skipped  '.$totalError.' from the total of '.$length.'  records!';
-                    
-                    Session::flash('message',  $message);
-                    return redirect('/admin/import');
-                }else{
-                    Session::flash('message', 'Error occured');
-                    return redirect('/admin/import');
                 }
             }
+        } catch (\Exception $e) {
+            // Session::flash('message', 'Something went wrong.');
+            Session::flash('message', $e->getLine().' - '.$e->getMessage());
+            return redirect('/admin/import');
         }
     }
 
     public function featureVideoImportCsv(Request $request)
     {
-        $this->validate($request,
+        $this->validate(
+            $request,
             ['feature_video_file' => 'required']
         );
         $featureVideoModel = new Product_feature_videos();
@@ -813,7 +831,8 @@ class ImportController extends Controller
                             if (count($row) == count($row)) {
                                 foreach ($row as $key => $value) {
                                     if (isset($value)) {
-                                        if (in_array('sku', $headersArray)
+                                        if (
+                                            in_array('sku', $headersArray)
                                             && in_array('name', $headersArray)
                                             && in_array('video', $headersArray)
                                         ) {
@@ -830,7 +849,7 @@ class ImportController extends Controller
                 $length = count($data);
                 $totalInsert = 0;
                 $totalError = 0;
-                $totalUpdate= 0;
+                $totalUpdate = 0;
                 $fileNotValid = 0;
                 if ($length != 0) {
                     for ($i = 1; $i <= $length; $i++) {
@@ -847,13 +866,13 @@ class ImportController extends Controller
                         $trimvideo = trim($video);
 
                         $productData = Products::where('sku', $trimSKU)->first('id');
-                        if (!empty($productData)  && !empty( $trimName)  && !empty( $trimvideo)){
+                        if (!empty($productData)  && !empty($trimName)  && !empty($trimvideo)) {
                             $trimvideoProid = $productData->id;
-                           
+
                             $featureVideoData = Product_feature_videos::where('name', $trimName)->where('proid', $trimvideoProid)->first();
- 
-                            if(!empty( $featureVideoData)){
-                               $featureVideoData->name = $trimName;
+
+                            if (!empty($featureVideoData)) {
+                                $featureVideoData->name = $trimName;
                                 if (!empty($featureVideoData->video)) {
                                     $destinationPath = $featureVideoData->video;
                                     $fileExists = file_exists($destinationPath);
@@ -862,36 +881,33 @@ class ImportController extends Controller
                                         File::delete($destinationPath);
                                     }
                                 }
-                               if(!empty($trimvideo)){
+                                if (!empty($trimvideo)) {
                                     $featureVideoData->video  = uplodImageByURL($trimvideo);
                                 }
                                 $featureVideoData->save();
                                 $totalUpdate++;
-                            }else{
+                            } else {
                                 $newFV = new Product_feature_videos;
                                 $newFV->name =  $trimName;
-                                if(!empty($trimvideo)){
+                                if (!empty($trimvideo)) {
                                     $newFV->video  = uplodImageByURL($trimvideo);
                                 }
                                 $newFV->proid =  $trimvideoProid;
                                 $newFV->save();
                                 $totalInsert++;
                             }
-
-                        }else{
+                        } else {
                             $totalError++;
                         }
-                      
                     }
-                    $message = 'Successfully inserted '.$totalInsert.', updated '.$totalUpdate.', and skipped  '.$totalError.' from the total of '.$length.'  records!';
-                    
+                    $message = 'Successfully inserted ' . $totalInsert . ', updated ' . $totalUpdate . ', and skipped  ' . $totalError . ' from the total of ' . $length . '  records!';
+
                     Session::flash('message',  $message);
                     return redirect('/admin/import');
-                }else{
+                } else {
                     Session::flash('message', 'Error occured');
                     return redirect('/admin/import');
                 }
-
             }
         }
     }

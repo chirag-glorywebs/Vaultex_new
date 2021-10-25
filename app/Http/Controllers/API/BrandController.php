@@ -35,7 +35,8 @@ class BrandController extends BaseController
         }
         
         foreach( $result as $item){
-            $item->brand_logo = asset('uploads/brand_image.png');
+            // $item->brand_logo = asset('uploads/brand_image.png');
+            $item->brand_logo = ($item->brand_logo) ? asset($item->brand_logo) : asset('uploads/brand_image.png');        
         
         }  
         return $this->sendResponse($result, 'Show all Product brands'); 

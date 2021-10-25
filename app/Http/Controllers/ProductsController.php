@@ -115,7 +115,7 @@ class ProductsController extends Controller
         if ($req->hasFile('main_image')) {
             $mainImage = $req->file('main_image');
             //thumbnail image
-            $thumbnail_image = resizeImage($mainImage,100,100,'thumbnail', true);
+            $thumbnail_image = resizeImage($mainImage,100,100,'thumbnail');
             //medium image
             $medium_image = resizeImage($mainImage,600,600,'medium', true);
             //large image
@@ -233,8 +233,9 @@ class ProductsController extends Controller
     public function deleteAll(Request $request)
     {
         $ids = $request->ids;
-        dd($ids);
-        // Products::whereIn('id',explode(",",$ids))->delete();
+        foreach ($ids as $key => $value) {
+            $this->delete($value);
+        }
         return response()->json(['success'=>"Products Deleted successfully."]);
     }
 
@@ -350,7 +351,7 @@ class ProductsController extends Controller
             if ($req->hasFile('main_image')) {
                 $mainImage = $req->file('main_image');
                 //thumbnail image
-                $thumbnail_image = resizeImage($mainImage,100,100,'thumbnail', true);
+                $thumbnail_image = resizeImage($mainImage,100,100,'thumbnail');
                 //medium image
                 $medium_image = resizeImage($mainImage,300,300,'medium', true);
                 //large image

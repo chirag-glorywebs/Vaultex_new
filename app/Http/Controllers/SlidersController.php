@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Yajra\DataTables\Facades\DataTables;
 use Session;
+use File;
 
 class SlidersController extends Controller
 {
@@ -157,7 +158,7 @@ class SlidersController extends Controller
                 $destinationPath = $sliders->image;
                 $fileExists = file_exists($destinationPath);
                 if ($fileExists) {
-                    unlink($destinationPath);
+                    File::delete($destinationPath);
                 }
             }
             $sliders_file = $request->file('image');
@@ -188,7 +189,7 @@ class SlidersController extends Controller
             $destinationPath = $slidersDelete->image;
             $fileExists = file_exists($destinationPath);
             if ($fileExists) {
-                unlink($destinationPath);
+                File::delete($destinationPath);
             }
         }
         $slidersDelete->delete();

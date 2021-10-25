@@ -115,7 +115,7 @@ class UserProductVideoController extends BaseController
     {        
         try {
             // Remove expired videos
-            $expiredProductVideos = UserProductVideo::getExpiredWatermarkVideos();
+            $expiredProductVideos = UserProductVideo::getExpiredWatermarkVideos();            
             foreach ($expiredProductVideos as $key => $value) {
                 if($value->video){
                     if (File::exists(public_path($value->video))) {
@@ -131,9 +131,10 @@ class UserProductVideoController extends BaseController
             if($userProductVideo->isNotEmpty()) {
                 foreach ($userProductVideo as $key => $upvItem) {
                     if($upvItem && ($upvItem->business_logo && file_exists(public_path($upvItem->business_logo))) && ($upvItem->product_video && file_exists(public_path($upvItem->product_video)))){
+
+                        $splitLogo = explode('.', $upvItem->business_logo);
                         $logo = trim($splitLogo[0]);
                         $watermakVideoTitle = $logo.'-'.$upvItem->id.'-watermark-video.mp4';
-                        $splitLogo = explode('.', $upvItem->business_logo);
                         $ffmpeg_string = getenv('FFMPEG_BINARIES');
                         $videotmp = public_path($upvItem->product_video);
                         $businessLogo = public_path($upvItem->business_logo);

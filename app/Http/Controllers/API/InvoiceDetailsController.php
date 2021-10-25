@@ -13,11 +13,12 @@ class InvoiceDetailsController extends Controller
 public function getInvoice(Request $request)
 {
     # code...
- 
+    $apiBaseUrl = 'http://192.168.22.8/IndusAPI/api';
+
     $curl = curl_init();
 
     curl_setopt_array($curl, array(
-      CURLOPT_URL => 'http://192.168.10.20/api/Invoice/GetInvoiceDetails?CustomerCode=S07001',
+      CURLOPT_URL => $apiBaseUrl.'/Invoice/GetInvoiceDetails?CustomerCode=S07001',
       CURLOPT_RETURNTRANSFER => true,
       CURLOPT_ENCODING => '',
       CURLOPT_MAXREDIRS => 10,

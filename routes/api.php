@@ -38,6 +38,10 @@ use Illuminate\Support\Facades\Route;
 |
  */
 
+ // Truncate Tables
+ Route::get('/truncate-product-tables', [ProductsController::class, 'truncateProductTables']);
+ Route::get('/export-products', [ProductsController::class, 'exportProductData']);
+ 
 /* Mobile APP */
 Route::get('/home', [HomeController::class, 'home'])->name('api.blogs');
 Route::get('homeweb',[HomeController::class,'homePage'])->name('api.homeweb');

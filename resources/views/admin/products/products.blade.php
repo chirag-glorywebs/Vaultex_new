@@ -8,13 +8,14 @@
     @endif
     <div class="card card-custom">
         <div class="card-body">
-            <div class="datatable datatable-default datatable-bordered datatable-loaded">
-            <table class="table table-bordered table-hover " id="datatable">
+            <div class="datatable datatable-default datatable-bordered datatable-loaded">            
+            
+            <table class="table table-bordered table-hover " id="datatable">                
                 <thead>
                 <tr>
-                    {{-- <th>
+                    <th>
                         <input type="checkbox" name="select_all" value="1" id="product-select-all">
-                    </th> --}}
+                    </th>
                     <th></th>
                     <th></th>
                     <th></th>
@@ -56,12 +57,10 @@ div.dataTables_wrapper div.dataTables_processing {
     font-size: 25px;
  
 }
-table.dataTable tr th.select-checkbox.selected::after {
-    content: "✔";
-    margin-top: -11px;
-    margin-left: -4px;
-    text-align: center;
-    text-shadow: rgb(176, 190, 217) 1px 1px, rgb(176, 190, 217) -1px -1px, rgb(176, 190, 217) 1px -1px, rgb(176, 190, 217) -1px 1px;
+
+.toolbar-delete {
+    float: right;
+    padding: 0 10px;
 }
 
     </style>
@@ -82,21 +81,26 @@ table.dataTable tr th.select-checkbox.selected::after {
                     style: 'multi',
                     selector: 'td:first-child'
                 },
+                dom: 'l<"toolbar-delete">frtip',
+                initComplete: function(){
+                    $("div.toolbar-delete")
+                        .html('<button class="btn btn-sm btn-danger">Delete Selected Products</button>');
+                },
                 processing: true,
                 serverSide: true,
                 responsive: true,
-                // order: [[1, 'asc']],
+                order: [[1, 'asc']],
                 ajax: "{{ route('products.index') }}",
                 columns: [ 
-                    // {
-                    //     data: "id", 
-                    //     name: "select-checkbox",
-                    //     orderable: false,
-                    //     searchable: false,
-                    //     render: function (data, type, full, meta){
-                    //         return '<input type="checkbox" name="id[]" value="' + $('<div/>').text(data).html() + '">';
-                    //     }               
-                    // },                      
+                    {
+                        data: "id", 
+                        name: "selectedIds",
+                        orderable: false,
+                        searchable: false,
+                        render: function (data, type, full, meta){
+                            return '<input type="checkbox" name="id[]" value="' + $('<div/>').text(data).html() + '">';
+                        }               
+                    },                      
                     {
                         sTitle: "No",
                         data: "id", 
@@ -208,28 +212,83 @@ table.dataTable tr th.select-checkbox.selected::after {
                 ]
             });
 
-            // // Handle click on "Select all" control
-            // $('#product-select-all').on('click', function(){
-            //     // Get all rows with search applied
-            //     var rows = table.rows({ 'search': 'applied' }).nodes();
-            //     // Check/uncheck checkboxes for all rows in the table
-            //     $('input[type="checkbox"]', rows).prop('checked', this.checked);
-            // });
+            // Handle Delete Selected Checkbox Event
+            $('.toolbar-delete').on('click', function(e){
+                
+                var ids = [];
+                $.each($("input[type='checkbox']:checked"), function(){
+                    if($(this).val()!='on'){
+                        ids.push($(this).val());
+                    }
+                });
+                if(ids.length>0){
+                    Swal.fire({
+                        title: 'Are you sure?',
+                        text: "You won't be able to revert this!",
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#3085d6',
+                        cancelButtonColor: '#d33',
+                        confirmButtonText: 'Yes, delete it!'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            $.ajax({
+                                dataType: "json",
+                                data: {
+                                    "_token": "{{ csrf_token() }}",
+                                    "ids": ids
+                                },
+                                url     : '/admin/products/delete-multi-products',
+                                type    : 'post',
+                                beforeSend: function () {
+                                },
+                                success: function (resultData) {
+                                    table.ajax.reload( null, false );
+                                    Swal.fire({
+                                        title: "Deleted!",
+                                        text: 'Product deleted successfully.',
+                                        timer: 800,
+                                        icon: "success",
+                                        showConfirmButton: false,
+                                    });
+                                },
+                                error: function (xhr, err) { 
+                                    Swal.fire(
+                                        "Error",
+                                        "Oops. Something went wrong. Please try again later.",
+                                        "error"
+                                    )
+                                }
+                            });
+                        }
+                    });                    
+                }
+                
+            }); 
+            
+            // Handle click on "Select all" control
+            $('#product-select-all').on('click', function(){
+                // Get all rows with search applied
+                var rows = table.rows({ 'search': 'applied' }).nodes();
+                // Check/uncheck checkboxes for all rows in the table
+                $('input[type="checkbox"]', rows).prop('checked', this.checked);
+            });
 
-            // // Handle click on checkbox to set state of "Select all" control
-            // $('#datatable tbody').on('change', 'input[type="checkbox"]', function(){
-            //     // If checkbox is not checked
-            //     if(!this.checked){
-            //         var el = $('#product-select-all').get(0);
-            //         // If "Select all" control is checked and has 'indeterminate' property
-            //         if(el && el.checked && ('indeterminate' in el)){
-            //             // Set visual state of "Select all" control
-            //             // as 'indeterminate'
-            //             el.indeterminate = true;
-            //         }
-            //     }
-            // });
+            // Handle click on checkbox to set state of "Select all" control
+            $('#datatable tbody').on('change', 'input[type="checkbox"]', function(){
+                // If checkbox is not checked
+                if(!this.checked){
+                    var el = $('#product-select-all').get(0);
+                    // If "Select all" control is checked and has 'indeterminate' property
+                    if(el && el.checked && ('indeterminate' in el)){
+                        // Set visual state of "Select all" control
+                        // as 'indeterminate'
+                        el.indeterminate = true;
+                    }
+                }
+            });
 
         });
     </script>
+    
 @endsection

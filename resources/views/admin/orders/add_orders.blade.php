@@ -18,7 +18,7 @@
             {{csrf_field()}}
             <?php
             if (!empty($allorders)) {
-                $orders = $allorders[0];
+                $orders = @$allorders[0];
             }
             ?>
        
@@ -89,10 +89,8 @@
                                     <tr>
                                         <td>{{ $key+1 }}</td>
                                         <td>
-                                            @if($data->main_image)
-
-                                                <img src="{{ URL::to($data->main_image) }}"
-                                                width="100" height="100"/>
+                                            @if($data->main_image && file_exists($data->main_image))
+                                                <img src="{{ URL::to($data->main_image) }}" width="100" height="100"/>
                                             @else  
                                              <img src="{{ asset('uploads/product-placeholder.png')}}"
                                                 width="100" height="100"/>
@@ -127,7 +125,7 @@
 @endforeach                                    </select>
                                 </div>
                                 <div class="col-md-6 text-right">
-                                    Total: <strong><?php echo $total;?></strong>
+                                    Total: <strong><?php //echo $total;?></strong>
                                 </div>
                                 <div class="col-md-6">
                                     <label>Order Date: </label>
@@ -167,7 +165,7 @@
                  <select name="status" class="form-control">
                  @foreach($ordersstatus as $status)
                          <option
-                             value="{{$status->id}}" {{ $status->id == @$orders['status'] ? "selected" : "" }}>{{$status->status}}</option>
+                             value="{{$status->id}}" {{ $status->status == @$orders['status'] ? "selected" : "" }}>{{$status->status}}</option>
                              @endforeach
                  </select>
                     </div>

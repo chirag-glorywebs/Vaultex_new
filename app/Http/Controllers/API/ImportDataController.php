@@ -17,16 +17,23 @@ use Illuminate\Support\Facades\Log;
 class ImportDataController extends Controller
 {
 
+    protected $apiBaseUrl;
+
     public function __construct()
     {
         ini_set('max_execution_time', 600); 
         ini_set('memory_limit','-1');
+
+        // http://192.168.22.8/IndusAPI/api
+        // $this->apiBaseUrl = 'http://192.168.10.20/api';
+        $this->apiBaseUrl = 'http://192.168.22.8/IndusAPI/api';
+
     }
 
     public function vendorImport()
     {
-      
-        $xml_data = $this->getXMLData('http://192.168.10.20/api/BPMaster/GetBPMaster');
+        
+        $xml_data = $this->getXMLData($this->apiBaseUrl.'/BPMaster/GetBPMaster');
         $xml = simplexml_load_string($xml_data, 'SimpleXMLElement', LIBXML_COMPACT | LIBXML_PARSEHUGE);   
         $vendorArr = json_decode($xml); 
       
@@ -88,8 +95,9 @@ class ImportDataController extends Controller
     //Import product Data
     public function productImport()
     {
+
         
-        $url = "http://192.168.10.20/api/ItemMaster/GetItemMaster";
+        // $url = "http://192.168.10.20/api/ItemMaster/GetItemMaster";       
         //$json =  @file_get_contents($url, false, $context);
         //$url =   asset('uploads/GetItemMaster.json');
        // $url =   'http://localhost/html/test/GetItemMaster1.json';
@@ -118,10 +126,9 @@ class ImportDataController extends Controller
       /*   $json =  file_get_contents($url);
         $obj = json_decode($json); */
       
-        $xml_data = $this->getXMLData('http://192.168.10.20/api/ItemMaster/GetItemMaster');
+        $xml_data = $this->getXMLData($this->apiBaseUrl.'/ItemMaster/GetItemMaster');
         $xml = simplexml_load_string($xml_data, 'SimpleXMLElement', LIBXML_COMPACT | LIBXML_PARSEHUGE);   
         $productArr = json_decode($xml); 
-       
         $icout = 0;
         $totalCount = count($productArr);
         $errors=  array();
@@ -315,12 +322,12 @@ class ImportDataController extends Controller
                         $icout++;
                     }
                 }else{
-                    $errors[] = array("gorupCode" => "The line # ".$product->U_Itemgrp." and # ".$product->ItemCode."  variation not createed");
+                    $errors[] = array("gorupCode" => "The line # ".$product->U_Itemgrp." and # ".$product->ItemCode."  variation not created");
                     $skipRow++; 
                 }
                  
             }else{
-                $errors[] = array("gorupCode" => "The line # ".$product->U_Itemgrp." and # ".$product->ItemCode." don't have and goup title is empty");
+                $errors[] = array("gorupCode" => "The line # ".$product->U_Itemgrp." and # ".$product->ItemCode." don't have and group title is empty");
                 $skipRow++;
             }
             
@@ -338,7 +345,7 @@ class ImportDataController extends Controller
     //Import product proice list for vendor
     public function productPriceImport()
     {
-        $xml_data = $this->getXMLData('http://192.168.10.20/api/ItemMaster/GetPriceList');
+        $xml_data = $this->getXMLData($this->apiBaseUrl.'/ItemMaster/GetPriceList');
         $xml = simplexml_load_string($xml_data, 'SimpleXMLElement', LIBXML_COMPACT | LIBXML_PARSEHUGE);   
         $productPriceListArr = json_decode($xml); 
         /* $ss = array();
@@ -401,7 +408,7 @@ class ImportDataController extends Controller
         // }
         
         $customerCode = ($request->has('CustomerCode')) ? $request->CustomerCode : '';
-        $xml_data = $this->getXMLData('http://192.168.10.20/api/Invoice/GetInvoiceDetails?CustomerCode='.$customerCode.'&FromDate='.$FromDate.'&ToDate'.$ToDate);
+        $xml_data = $this->getXMLData($this->apiBaseUrl.'/Invoice/GetInvoiceDetails?CustomerCode='.$customerCode.'&FromDate='.$FromDate.'&ToDate'.$ToDate);
         $xml = simplexml_load_string($xml_data, 'SimpleXMLElement', LIBXML_COMPACT | LIBXML_PARSEHUGE);   
         $invoices = json_decode($xml); 
         
