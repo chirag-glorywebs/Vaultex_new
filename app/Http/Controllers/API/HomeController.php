@@ -168,7 +168,7 @@ class HomeController extends BaseController
                     $join->on('products.id', '=', 'liked_products.liked_products_id')
                          ->on('users.id', '=', 'liked_products.liked_customers_id');
                 }) 
-                ->select('products.id','products.category_id','products.product_name','products.product_type','products.medium_image','products.main_image','products.sku','products.slug','price_lists.list_price AS uprice', DB::raw('COALESCE(price_lists.list_price, products.regular_price) as price'),'liked_products.id as wishlist')
+                ->select('products.id','products.category_id','products.product_name','products.product_type', 'products.thumbnail_image', 'products.medium_image','products.main_image','products.sku','products.slug','price_lists.list_price AS uprice', DB::raw('COALESCE(price_lists.list_price, products.regular_price) as price'),'liked_products.id as wishlist')
                 ->where('users.id', '=', $user_id) 
                 ->where('products.status', 1)
                 ->orderBy('id', 'ASC');
@@ -182,9 +182,9 @@ class HomeController extends BaseController
                 });
                 $cc_products = $cat_products_query->get();
                 foreach ($cc_products as $items) {
-                    if (!empty($items->medium_image) && file_exists($items->medium_image)) {
-                       $items->main_image = asset($items->medium_image);
-                    }elseif (!empty($items->main_image) && file_exists($items->main_image)&& empty($items->medium_image) ) {
+                    if (!empty($items->thumbnail_image) && file_exists($items->thumbnail_image)) {
+                       $items->main_image = asset($items->thumbnail_image);
+                    }elseif (!empty($items->main_image) && file_exists($items->main_image)&& empty($items->thumbnail_image) ) {
                         $items->main_image = asset($items->main_image);
                     } else {
                         $items->main_image = asset('uploads/placeholder-medium.jpg');
@@ -205,7 +205,7 @@ class HomeController extends BaseController
             foreach($cat_products as  $key=>$cat_data ){
                 $cc_products = null;
                 $cat_id = $cat_data['id'];
-                $cat_products_query = DB::table('products')->select('products.id', 'products.product_name', 'products.sku', 'products.regular_price', 'products.sale_price', 'products.medium_image','products.main_image', 'products.slug')->where('products.status', 1)->take(10)->orderBy('id', 'DESC');
+                $cat_products_query = DB::table('products')->select('products.id', 'products.product_name', 'products.sku', 'products.regular_price', 'products.sale_price', 'products.thumbnail_image', 'products.medium_image','products.main_image', 'products.slug')->where('products.status', 1)->take(10)->orderBy('id', 'DESC');
                 $categoryIds = Categories::where('parent_category', $cat_id)->where('status', 1)->pluck('id')->all(); 
                 $childCatData = Categories::whereIn('parent_category',$categoryIds)->where('status', 1)->pluck('id')->all();
                 $cat_products_query->where(function ($q) use($cat_id, $categoryIds, $childCatData ) { 
@@ -215,9 +215,9 @@ class HomeController extends BaseController
                 });
                 $cc_products = $cat_products_query->get();
                 foreach ($cc_products as $items) {
-                    if (!empty($items->medium_image) && file_exists($items->medium_image)) {
-                       $items->main_image = asset($items->medium_image);
-                    }elseif (!empty($items->main_image) && file_exists($items->main_image)&& empty($items->medium_image) ) {
+                    if (!empty($items->thumbnail_image) && file_exists($items->thumbnail_image)) {
+                       $items->main_image = asset($items->thumbnail_image);
+                    }elseif (!empty($items->main_image) && file_exists($items->main_image)&& empty($items->thumbnail_image) ) {
                         $items->main_image = asset($items->main_image);
                     } else {
                         $items->main_image = asset('uploads/placeholder-medium.jpg');
@@ -261,7 +261,7 @@ class HomeController extends BaseController
                 $join->on('products.id', '=', 'liked_products.liked_products_id')
                      ->on('users.id', '=', 'liked_products.liked_customers_id');
             }) 
-            ->select('products.id','products.category_id','products.product_name','products.product_type','products.medium_image','products.main_image','products.sku','products.slug','price_lists.list_price AS uprice', DB::raw('COALESCE(price_lists.list_price, products.regular_price) as price'),'liked_products.id as wishlist')
+            ->select('products.id','products.category_id','products.product_name','products.product_type','products.thumbnail_image', 'products.medium_image','products.main_image','products.sku','products.slug','price_lists.list_price AS uprice', DB::raw('COALESCE(price_lists.list_price, products.regular_price) as price'),'liked_products.id as wishlist')
             ->where('users.id', '=', $user_id) 
             ->where('products.status', 1)
             ->take(10)->orderBy('products.id', 'ASC')->get();
@@ -269,8 +269,8 @@ class HomeController extends BaseController
             $best_selling =  DB::table('products')->select('id', 'product_name', 'sku', 'regular_price', 'sale_price', 'medium_image','main_image', 'slug')->where('status', 1)->take(10)->orderBy('id', 'DESC')->get();
         }   
         foreach ($best_selling as $items) {
-            if (!empty($items->medium_image) && file_exists($items->medium_image)) {
-               $items->main_image = asset($items->medium_image);
+            if (!empty($items->thumbnail_image) && file_exists($items->thumbnail_image)) {
+               $items->main_image = asset($items->thumbnail_image);
             }elseif (!empty($items->main_image) && file_exists($items->main_image)&& empty($items->medium_image) ) {
                 $items->main_image = asset($items->main_image);
             } else {
@@ -285,7 +285,7 @@ class HomeController extends BaseController
                 $items->wishlist = false;
                 $items->uprice = null;
             }
-        } 
+        }
         return $this->sendResponse(['slider' => $slider_data, 'categories' => $Categories, 'topOffer' => $topOffer, 'catProductsList' => $cat_products, 'bottomOffer' => $bottom_images, 'topsaleProducts' => $best_selling, 'brands' => $Brands], 'Home page Details');
     }
 }

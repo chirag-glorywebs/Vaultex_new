@@ -84,11 +84,11 @@ class ImportDataController extends Controller
                     $ucout++;
                 }
             }else{
-                $errors[] = array("BPCode" => "The line # ".$vendor->CardCode." and #Name ".$vendor->CardName);
+                $errors[] = array("BPCode" => "The line # ".$vendor->CardCode." and #Name ".$vendor->CardName.", List Num ".$vendor->ListNum.". Sales Person ".$salesperson);
                 $skipRow++;
-            }  
+            }
         }   
-      return response()->json(['message'=>'skeep recored '.$skipRow.' successfully inserted '.$icout.' successfully Updated '.$ucout.' out of total '.$totalCount,'error'=>$errors],200); 
+      return response()->json(['message'=>'Skip records: '.$skipRow.', Successfully inserted: '.$icout.', Successfully Updated: '.$ucout.' out of total '.$totalCount,'error'=>$errors],200); 
  
     }
 
@@ -170,7 +170,7 @@ class ImportDataController extends Controller
                     $productExist->product_name = $product->U_Itemgrpname;
                     $productExist->seo_title = $product->U_Itemgrpname;
                     $productExist->product_type = 'variable';
-                    $productExist->save(); 
+                    $productExist->save();
                     $product_id = $productExist->id;
              
                 }else {
@@ -335,9 +335,9 @@ class ImportDataController extends Controller
         }  
         
         if(!empty($errors)){
-            return response()->json(['message'=>'skeep recored '.$skipRow.' out of total '.$totalCount.'successfully inserted '.$icout,'error'=>$errors],200); 
+            return response()->json(['message'=>'Skip records '.$skipRow.' out of total '.$totalCount.' successfully inserted '.$icout,'error'=>$errors],200); 
         }else{
-            return response()->json(['message'=>'recored  inserted','Total'=>$totalCount],200); 
+            return response()->json(['message'=>'Records inserted','Total'=>$totalCount],200); 
         }
        
     }

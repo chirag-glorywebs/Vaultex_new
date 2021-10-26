@@ -403,8 +403,8 @@ class ImportController extends Controller
                                             File::delete($destinationPath);
                                         }
                                     }
-                                    //medium image
-                                    $model->thumbnail_image = resizeImageByURL($main_image, 100, 100, 'thumbnail');
+                                    //thumbnail image
+                                    $model->thumbnail_image = resizeImageByURL($main_image, 200, 200, 'thumbnail');
                                     //medium image
                                     $model->medium_image = resizeImageByURL($main_image, 300, 300, 'medium', true);
                                     //large image

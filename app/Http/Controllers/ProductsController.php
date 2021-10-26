@@ -115,9 +115,9 @@ class ProductsController extends Controller
         if ($req->hasFile('main_image')) {
             $mainImage = $req->file('main_image');
             //thumbnail image
-            $thumbnail_image = resizeImage($mainImage,100,100,'thumbnail');
+            $thumbnail_image = resizeImage($mainImage,200,200,'thumbnail');
             //medium image
-            $medium_image = resizeImage($mainImage,600,600,'medium', true);
+            $medium_image = resizeImage($mainImage,300,300,'medium', true);
             //large image
             $large_image = resizeImage($mainImage,600,600,'large', true);
             $mainImageSave = uplodImage($mainImage,true);
@@ -351,7 +351,7 @@ class ProductsController extends Controller
             if ($req->hasFile('main_image')) {
                 $mainImage = $req->file('main_image');
                 //thumbnail image
-                $thumbnail_image = resizeImage($mainImage,100,100,'thumbnail');
+                $thumbnail_image = resizeImage($mainImage,200,200,'thumbnail');
                 //medium image
                 $medium_image = resizeImage($mainImage,300,300,'medium', true);
                 //large image
