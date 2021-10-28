@@ -46,9 +46,35 @@
             data-menu-vertical="1"
             {{ Metronic::printAttrs('aside_menu') }}>
 
-            <ul class="menu-nav {{ Metronic::printClasses('aside_menu_nav', false) }}">
+            @if (Auth::user())               
+                @if(Auth::user()->user_role== Helper::getRollId('SALES'))
+                    @php
+                    $items = config('menu_aside.items');
+                    $displayMenus = [];
+                    @endphp
+                    @foreach ($items as $key => $value)                     
+                        @if(isset($value['seller_access']) && $value['seller_access'])
+                            @php                                
+                                $displayMenus[] = $value;          
+                            @endphp
+                        @endif    
+                    @endforeach
+                    @php                        
+                        $menuItems = $displayMenus; //['items' => $displayMenus];
+                    @endphp
+                    <ul class="menu-nav {{ Metronic::printClasses('aside_menu_nav', false) }}">
+                    {{ Menu::renderVerMenu($menuItems) }}
+                    </ul>
+                @else
+                    <ul class="menu-nav {{ Metronic::printClasses('aside_menu_nav', false) }}">
+                    {{ Menu::renderVerMenu(config('menu_aside.items')) }}               
+                    </ul>
+                @endif
+            @endif
+
+            {{-- <ul class="menu-nav {{ Metronic::printClasses('aside_menu_nav', false) }}">
                 {{ Menu::renderVerMenu(config('menu_aside.items')) }}
-            </ul>
+            </ul> --}}
         </div>
     </div>
 

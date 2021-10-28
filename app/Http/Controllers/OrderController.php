@@ -11,9 +11,11 @@ use App\Models\User;
 use App\Models\User_addresses;
 use App\Models\Order_statuses;
 use App\Models\Order_products;
+use App\Models\ManageOrderStatus;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
-use App\Models\Manage_order_status;
+
+use Helper;
 use Orders;
 use Session;
 use Yajra\DataTables\Facades\DataTables;
@@ -61,11 +63,17 @@ class OrderController extends Controller
             //     dd($orders);
             $orders = DB::table('orders')
                 ->join('users', 'users.id', '=', 'orders.userid')
-                ->join('order_statuses', 'order_statuses.id', '=', 'orders.orders_status')
-                ->select('orders.*', 'users.first_name', 'users.last_name', 'order_statuses.status')
-                ->where('orders.userid', $user->id)
-                ->get();
-            //    dd($orders);
+                ->join('order_statuses', 'order_statuses.id', '=', 'orders.orders_status');
+
+            $orders = $orders->select('orders.*', 'users.first_name', 'users.last_name', 'order_statuses.status');
+            // $orders = $orders->where('orders.userid', $user->id);
+
+            // SalesRole wise data
+            if($user->user_role==Helper::getRollId('SALES')){
+                $orders = $orders->where('users.salesperson', $user->id);            
+            } 
+
+            $orders = $orders->get();
 
             return Datatables::of($orders)
                 ->editColumn('first_last_name', function ($orderList) {
@@ -114,7 +122,7 @@ class OrderController extends Controller
             ->where('order_id', '=', $id)
             ->get();
 
-        $manage_orders = DB::table('Manage_order_status')->join('orders', 'orders.id', '=', 'Manage_order_status.orderid')
+        $manage_orders = DB::table('manage_order_status')->join('orders', 'orders.id', '=', 'manage_order_status.orderid')
             ->select('order_status_date')
             ->where('orderid', $id)->first();
     
@@ -136,17 +144,16 @@ class OrderController extends Controller
     //     Session::flash('message', 'Successfully updated!');
     //     return redirect('/admin/orders');
     // }
-    public function update(Request $request)
-    {
+    public function update(Request $request){
         # code...
         $orders  = Order::find($request->id);
         $orders->orders_status = $request->status;
         $orders->save();
-        $Manage_order_status = new Manage_order_status;
-        $Manage_order_status->orderid = $orders->id;
-        $Manage_order_status->order_status_id = $request->status;
-        $Manage_order_status->order_status_date = $request->date;
-        $Manage_order_status->save();
+        $manage_order_status = new ManageOrderStatus;
+        $manage_order_status->orderid = $orders->id;
+        $manage_order_status->order_status_id = $request->status;
+        $manage_order_status->order_status_date = $request->date;
+        $manage_order_status->save();
         Session::flash('message', 'Successfully updated!');
         return redirect('/admin/orders');
     }

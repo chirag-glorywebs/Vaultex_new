@@ -25,7 +25,7 @@ class Cart extends Model
             ->where('user_id', $user_id)
             ->select([
                 'customers_basket.id', 'customers_basket.quantity', 'customers_basket.price', 'products.id', 'customers_basket.user_id', 'products.product_name', 'products.regular_price', 'products.sale_price',
-                'products.main_image', 'products.sku', 'products.slug', 'products.specification'
+                'products.thumbnail_image', 'products.thumbnail_image', 'products.sku', 'products.slug', 'products.specification'
             ])
             ->where('is_order', 0)
             ->orderby('products.'.$orderby, $order)->get();
@@ -38,6 +38,11 @@ class Cart extends Model
                     $data->main_image = asset($data->main_image);
                 } else {
                     $data->main_image = asset('uploads/product-placeholder.png');
+                }
+                if (!empty($data->thumbnail_image) && file_exists($data->thumbnail_image)) {
+                    $data->thumbnail_image = asset($data->thumbnail_image);
+                } else {
+                    $data->thumbnail_image = asset('uploads/product-placeholder.png');
                 }
                 if (!empty($data->tech_documents)) {
                     $data->tech_documents = asset($data->tech_documents);

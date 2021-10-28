@@ -149,6 +149,7 @@ Route::group(['middleware' => 'auth:api'], function () {
 	Route::post('/carts/update', [CartController::class, 'update'])->name('api.cart.update');
 	Route::post('/applyCoupon', [CartController::class, 'applyCoupon'])->name('api.cart.applyCoupon');
 	Route::post('/check-item-in-stock', [CartController::class, 'checkItemInStock'])->name('api.check_item_in_stock');
+	Route::post('/carts/multiupdate', [CartController::class, 'multiupdate'])->name('api.cart.multiupdate');
 
 	/* BULK ORDER ROUTES */
 	Route::post('/rfq/create', [BulkOrderController::class, 'create'])->name('api.rfq.create');

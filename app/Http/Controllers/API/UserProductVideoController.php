@@ -152,11 +152,29 @@ class UserProductVideoController extends BaseController
                         $result = $productsVideo->save();
                     }
                 }
-                return $this->sendResponse($result, 'Product videos created successfully.');
+                $message = 'Product videos created successfully.';
+                // return $this->sendResponse($result, 'Product videos created successfully.');
             } else {
-                return $this->sendResponse($result, 'Product not available.');
+                $message = 'Product not available.';
+                // return $this->sendResponse($result, 'Product not available.');
             }
+
+            $responseData = [
+                'message'=>$message,
+                'error'=>'',
+                'function' => 'waterMarkVideo'            
+            ];
+            $send = User::sendNotificationForCron($responseData);
+            // return response()->json($responseData,200); 
+            return $this->sendResponse($result, $message);
+
         } catch (\Exception $e) {
+            $responseData = [
+                'message'=>'Something went wrong.',
+                'error'=>$e->getLine().' - '.$e->getFile().' - '.$e->getMessage(),
+                'function' => 'waterMarkVideo'
+            ];
+            $send = User::sendNotificationForCron($responseData);
             return $this->sendError('Something Went Wrong.');
         }
         

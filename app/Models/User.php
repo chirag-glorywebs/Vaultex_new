@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Passport\HasApiTokens;
+use Mail;
 
 
 class User extends Authenticatable
@@ -60,5 +61,17 @@ class User extends Authenticatable
     public function linkedSocialAccounts()
     {
         return $this->hasMany(LinkedSocialAccount::class);
+    }
+
+    public static function sendNotificationForCron($responseData)
+    {        
+        $emailAddress = 'ranjitsinh@glorywebsdev.com';
+        Mail::send('API.email.cron-notification', [
+            'email' => $emailAddress,
+            'data' => $responseData
+        ], function ($message) use ($emailAddress) {
+            $message->subject('Notification for cron.');
+            $message->to($emailAddress);
+        });
     }
 }

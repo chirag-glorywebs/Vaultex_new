@@ -404,7 +404,7 @@ class ImportController extends Controller
                                         }
                                     }
                                     //thumbnail image
-                                    $model->thumbnail_image = resizeImageByURL($main_image, 200, 200, 'thumbnail');
+                                    $model->thumbnail_image = resizeImageByURL($main_image, 180, 180, 'thumbnail');
                                     //medium image
                                     $model->medium_image = resizeImageByURL($main_image, 300, 300, 'medium', true);
                                     //large image

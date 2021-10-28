@@ -5,13 +5,15 @@ namespace App\Http\Controllers;
 use App\Models\Page;
 use App\Models\User;
 use App\Models\VendorEmail;
-use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-use Mail;
-use Yajra\DataTables\Facades\DataTables;
-use DB;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Auth;
+use Yajra\DataTables\Facades\DataTables;
+use Carbon\Carbon;
+use DB;
+use Mail;
+use Helper;
 
 class VendorEnquiryController extends Controller
 {
@@ -27,6 +29,16 @@ class VendorEnquiryController extends Controller
         $page_description = 'Listing of all retrieve login access enquiry page name';
         if ($request->ajax()) {
             $vendorEnquiry = VendorEmail::all();
+
+            $vendorEnquiry = VendorEmail::select('vendor_emails.*');
+            $user = Auth::user();
+            if($user->user_role==Helper::getRollId('SALES')){
+                $vendorEnquiry = $vendorEnquiry
+                ->join('users', 'users.vendor_code', '=', 'vendor_emails.vendor_code')
+                ->where('users.salesperson', $user->id);
+            }            
+            $vendorEnquiry = $vendorEnquiry->get();
+
             return Datatables::of($vendorEnquiry)
                 ->addIndexColumn()
                 ->addColumn('action', function ($vendorEnquiryList) {

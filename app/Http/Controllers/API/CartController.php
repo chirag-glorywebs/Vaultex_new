@@ -19,10 +19,14 @@ use PhpParser\Node\Expr\AssignOp\Concat;
 class CartController extends BaseController
 {
 
+    protected $apiBaseUrl;
+
     public function __construct(Cart $cart,Coupon $coupon)
     {
         $this->cart = $cart;
         $this->coupon = $coupon;
+        $this->apiBaseUrl = 'http://192.168.22.8/IndusAPI/api';
+
     }
     /**
      * Add to Cart api
@@ -134,7 +138,8 @@ class CartController extends BaseController
         if ($cartItems['grandTotal'] > 0) {
             return $this->sendResponse($cartItems, 'Cart Product List');
         } else {
-            return $this->sendError('You have no items in your shopping cart.');
+            return $this->sendResponse([], 'You have no items in your shopping cart.');
+            // return $this->sendError('You have no items in your shopping cart.');
         }
 
         /* 
@@ -231,6 +236,91 @@ class CartController extends BaseController
             }
         }
     }
+
+
+    /**
+     * Update Cart API
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function multiupdate(Request $request)
+    {
+        
+        $requestData = $request->all();
+        return $requestData;
+        foreach ($requestData as $key => $cartItem) {
+            $user_id = $request->user()->id;
+            $product_variation =   CustomerBasketAttribute::where('product_id', $cartItem['product_id'])
+                ->where('customer_id', $user_id)
+                ->where('variant_id', $cartItem['variant_id'])
+                ->first();
+
+            $product_attribute =   CustomerBasket::where('product_id', $cartItem['product_id'])
+                ->where('user_id', $user_id)
+                ->first();
+            if (!empty($product_attribute) && !empty($product_variation)) {
+                $total_qty = $product_attribute->quantity;
+                $total_qty =  ($total_qty - $product_variation->quantity) + $cartItem['quantity'];
+                if($total_qty<=0){
+                    $product_variation->quantity  = $cartItem['quantity'];
+                    $product_attribute->quantity  = $total_qty;
+                    $product_attribute->sub_total  = number_format((float)$total_qty * $product_attribute->price, 2, '.', '');
+                    $product_attribute->save();
+                    $product_variation->save();
+                    $data['sub_total']  =  $product_attribute->sub_total;
+                } else {
+                    $CustomerBasket =  CustomerBasket::where('product_id', $cartItem['product_id'])->where('user_id', $user_id)->first();
+                    $data = CustomerBasketAttribute::where('customers_basket_id', $CustomerBasket->id)->delete();
+                    if(($key+1)==count($requestData)){
+                        $data =  CustomerBasket::where('product_id',  $cartItem['product_id'])->where('user_id', $user_id)->delete();
+                    }
+                }
+            }
+
+        }
+        return $this->sendResponse([], "Cart quantity updated successfully");
+
+        // $validator = Validator::make($request->all(), [
+        //     'product_id' => 'required|integer',
+        //     'quantity' => 'required|numeric|gt:0',
+        //     'variant_id' => 'required|integer'
+
+        // ]);
+        // $user_id = $request->user()->id;
+
+        // if ($validator->fails()) {
+        //     return $this->sendError('Validation Error.', $validator->errors());
+        // } else {
+
+        //     $product_variation =   CustomerBasketAttribute::where('product_id', $request->product_id)
+        //         ->where('customer_id', $user_id)
+        //         ->where('variant_id', $request->variant_id)
+        //         ->first();
+        //     $product_attribute =   CustomerBasket::where('product_id', $request->product_id)
+        //         ->where('user_id', $user_id)
+        //         ->first();
+
+        //     if (!empty($product_attribute) && !empty($product_variation)) {
+
+        //         $total_qty = $product_attribute->quantity;
+        //         $total_qty =  ($total_qty - $product_variation->quantity) + $request->quantity;
+
+        //         $product_variation->quantity  = $request->quantity;
+        //         $product_attribute->quantity  = $total_qty;
+        //         $product_attribute->sub_total  = number_format((float)$total_qty * $product_attribute->price, 2, '.', '');
+
+        //         $product_attribute->save();
+        //         $product_variation->save();
+        //         $data['sub_total']  =  $product_attribute->sub_total;
+
+        //         return $this->sendResponse($data, "Cart quantity updated successfully");
+        //     } else {
+        //         return $this->sendError('prodcut not found.', $product_variation);
+        //     }
+        // }
+    }
+
+
     /**
      * Delete Cart API
      *
@@ -319,28 +409,42 @@ class CartController extends BaseController
      * @return \Illuminate\Http\Response
      */
     public function checkItemInStock(Request $request){
+        
         try{
-            $apiUrl = 'http://192.168.10.20';
             $requestData = $request->all();
-            $outOfStockProduct = [];
-            $outOfStockProductResult = [];
+            $outOfStockProductResult = [];     
+            $user_id = $request->user()->id;
+            
             foreach ($requestData['items'] as $itemKey => $itemValue) {
                 $sku = ($itemValue['sku']) ? $itemValue['sku']: '';
-                $xml_data = $this->getXMLData($apiUrl.'/api/ItemMaster/GetItemStock?ItemGrp='.$sku);            
+                $xml_data = $this->getXMLData($this->apiBaseUrl.'/ItemMaster/GetItemStock?ItemGrp='.$sku);            
                 $xml = simplexml_load_string($xml_data, 'SimpleXMLElement', LIBXML_COMPACT | LIBXML_PARSEHUGE);
-                $apiStockArr = json_decode($xml);                        
-                
-                $stockResponse = SELF::getOutOfStockProduct($itemValue, $apiStockArr);
-                if($stockResponse){
+                $apiStockArr = json_decode($xml);
+
+                $stockResponse = [];
+                // foreach ($itemValue['products_attributes'] as $key => $productAttr) {
+                    // $stockResponse[] = SELF::getOutOfStockProduct($productAttr, $apiStockArr, $itemValue['id']);
+                    $stockResponse[] = SELF::getOutOfStockProduct($itemValue['products_attributes'], $apiStockArr, $itemValue['id'], $user_id);
+                // }
+
+                // $stockResponse = SELF::getOutOfStockProduct($itemValue, $apiStockArr);
+                if(count($stockResponse) > 0){
+                    $stockResponse = array_filter($stockResponse);
                     $outOfStockProductResult[] = $stockResponse;
                 }
             }
+
             
+            $outOfStockProduct = [];
             $outOfStockProduct = $outOfStockProductResult;
+
+            // ********************************
+            // return $outOfStockProduct;
+
             $outOfStockData = [];
             if(count($outOfStockProduct) > 0){
                 $outOfStockData = $outOfStockProduct;
-                return $this->sendResponse($outOfStockData, 'Unfortunately we have just been informed that the below cart item\'s are discontinued and no longer available. Please update your quantities.');
+                return $this->sendResponse($outOfStockData, 'Out of stock data.');
             }
             return $this->sendResponse($outOfStockData, 'All products available in stock.');
         } catch(Exception $exception) {
@@ -349,36 +453,178 @@ class CartController extends BaseController
 
     }
 
-    public function getOutOfStockProduct($product, $apiStockArr){
+    public function getOutOfStockProduct($productAttr, $apiStockArr, $productId, $user_id){
 
-        $productAttr = $product['products_attributes'][0];  
-
-        $found_key = false;
-        if($apiStockArr){
-            $found_key = array_search($productAttr['item_code'], array_column($apiStockArr, 'ItemCode'));
-        }
-        if($found_key===false){
-            $result = [
-                'totalAvailableStock' => 0,
-                'item_code' => $productAttr['item_code'],
-                'product_name' => $product['product_name']
-            ];
-        } else {
-            $apiItem = $apiStockArr[$found_key];
-            $result = null;
-            if($apiItem->ItemCode==$productAttr['item_code']){
-                $inStockProducts = ($apiItem->AvailableStock - $apiItem->Committed);            
-                if( $productAttr['quantity'] > $inStockProducts ) {
-                    $result = [
-                        'totalAvailableStock' => $inStockProducts,
-                        'item_code' => $productAttr['item_code'],
-                        'product_name' => $product['product_name']
+            $result= [];
+            foreach ($productAttr as $key => $productAttrValue) {
+                $found_key = false;
+                if($apiStockArr){
+                    $found_key = array_search($productAttrValue['item_code'], array_column($apiStockArr, 'ItemCode'));
+                }
+                if($found_key===false){
+                    // No attribute available then delete Product Cart Attribute                    
+                    $dataArr = [
+                        // 'product_name' => $product['product_name'],
+                        'product_id' => $productId,
+                        'item_code' => $productAttrValue['item_code'],
+                        'quantity' => 0,
+                        'not_in_stock_quantity' => $productAttrValue['quantity'],
+                        'variant_id' => $productAttrValue['variant_id'],
+                        'user_id' => $user_id,
                     ];
-                } 
-            } 
+                    $result[] = $dataArr;
+
+                    // Delete Product Attribute
+                    $deleted = SELF::deleteCartProductAttribute($dataArr);
+
+                } else {
+                    $apiItem = $apiStockArr[$found_key];
+                    if($apiItem->ItemCode==$productAttrValue['item_code']){
+                        $inStockProducts = ($apiItem->AvailableStock - $apiItem->Committed);            
+                        if( (int)$productAttrValue['quantity'] > (int)$inStockProducts ) {
+                            $totalAvailableQty = $inStockProducts;
+                            $totalNotAvailableQty = $productAttrValue['quantity'] - $inStockProducts;
+                            $dataArr = [
+                                'product_id' => $productId,
+                                'item_code' => $productAttrValue['item_code'],
+                                'quantity' => $totalAvailableQty,
+                                'not_in_stock_quantity' => $totalNotAvailableQty,
+                                'variant_id' => $productAttrValue['variant_id'],
+                                'user_id' => $user_id
+                            ];
+                            $result[] = $dataArr;
+
+                            // check product attribute in stock then update in cart otherwise remove in cart
+                            if($totalAvailableQty<=0){
+                                // Delete Product Attribute
+                                $deleted = SELF::deleteCartProductAttribute($dataArr);
+
+                            } else {
+                                // Update Product Attribute Quantity
+                                $updated = SELF::updateCartProductAttribute($dataArr);
+                            }
+
+                        } 
+                    } 
+
+                }
+            }
+            return $result;
+    }  
+
+    public function deleteCartProductAttribute($cartItem)
+    {      
+        
+        $customerBasket =  CustomerBasket::where('product_id', $cartItem['product_id'])->where('user_id', $cartItem['user_id'])->first();
+        if($customerBasket){
+            $deleteProductAttribute = CustomerBasketAttribute::where('customers_basket_id', $customerBasket->id)->delete();
+            if($deleteProductAttribute){
+                $attrCount = CustomerBasketAttribute::where('customers_basket_id', $customerBasket->id)->count();
+                if($attrCount==0){
+                    $deleteProduct =  CustomerBasket::where('product_id',  $cartItem['product_id'])->where('user_id', $cartItem['user_id'])->delete();
+                }
+            }
         }
-        return $result;
-    }    
+        return true;
+    }
+
+    public function updateCartProductAttribute($cartItem)
+    {        
+
+        $product_variation =   CustomerBasketAttribute::where('product_id', $cartItem['product_id'])
+            ->where('customer_id', $cartItem['user_id'])
+            ->where('variant_id', $cartItem['variant_id'])
+            ->first();
+
+        $product_attribute =   CustomerBasket::where('product_id', $cartItem['product_id'])
+            ->where('user_id', $cartItem['user_id'])
+            ->first();
+
+        if (!empty($product_attribute) && !empty($product_variation)) {
+            $total_qty = $product_attribute->quantity;
+            $total_qty =  ($total_qty - $product_variation->quantity) + $cartItem['quantity'];
+            if($total_qty<=0) {
+                $product_variation->quantity  = $cartItem['quantity'];
+                $product_attribute->quantity  = $total_qty;
+                $product_attribute->sub_total  = number_format((float)$total_qty * $product_attribute->price, 2, '.', '');
+                $product_attribute->save();
+                $product_variation->save();
+                $data['sub_total']  =  $product_attribute->sub_total;
+            }
+        }
+        return true;
+
+    }
+
+
+
+    // /**
+    //  *  Check cart items available in stock
+    //  *
+    //  * @return \Illuminate\Http\Response
+    //  */
+    // public function checkItemInStock(Request $request){        
+    //     try{
+    //         $requestData = $request->all();
+    //         $outOfStockProductResult = [];            
+    //         foreach ($requestData['items'] as $itemKey => $itemValue) {
+    //             $sku = ($itemValue['sku']) ? $itemValue['sku']: '';
+    //             $xml_data = $this->getXMLData($this->apiBaseUrl.'/ItemMaster/GetItemStock?ItemGrp='.$sku);            
+    //             $xml = simplexml_load_string($xml_data, 'SimpleXMLElement', LIBXML_COMPACT | LIBXML_PARSEHUGE);
+    //             $apiStockArr = json_decode($xml);                        
+    //             $stockResponse = SELF::getOutOfStockProduct($itemValue, $apiStockArr);
+    //             if($stockResponse){
+    //                 $outOfStockProductResult[] = $stockResponse;
+    //             }
+    //         }
+    //         $outOfStockProduct = [];
+    //         $outOfStockProduct = $outOfStockProductResult;
+    //         $outOfStockData = [];
+    //         if(count($outOfStockProduct) > 0){
+    //             $outOfStockData = $outOfStockProduct;
+    //             return $this->sendResponse($outOfStockData, 'Unfortunately we have just been informed that the below cart item\'s are discontinued and no longer available. Please update your quantities.');
+    //         }
+    //         return $this->sendResponse($outOfStockData, 'All products available in stock.');
+    //     } catch(Exception $exception) {
+    //         return $this->sendError($exception->getMessage());
+    //     }
+    // }
+
+
+
+    // public function getOutOfStockProduct($product, $apiStockArr){
+
+    //     foreach ($product['products_attributes'] as $key => $productAttr) {
+           
+    //         // $productAttr = $product['products_attributes'][0];  
+
+    //         $found_key = false;
+    //         if($apiStockArr){
+    //             $found_key = array_search($productAttr['item_code'], array_column($apiStockArr, 'ItemCode'));
+    //         }
+    //         if($found_key===false){
+    //             $result = [
+    //                 'totalAvailableStock' => 0,
+    //                 'item_code' => $productAttr['item_code'],
+    //                 'product_name' => $product['product_name'],
+    //             ];
+    //         } else {
+    //             $apiItem = $apiStockArr[$found_key];
+    //             $result = null;
+    //             if($apiItem->ItemCode==$productAttr['item_code']){
+    //                 $inStockProducts = ($apiItem->AvailableStock - $apiItem->Committed);            
+    //                 if( $productAttr['quantity'] > $inStockProducts ) {
+    //                     $result = [
+    //                         'totalAvailableStock' => $inStockProducts,
+    //                         'item_code' => $productAttr['item_code'],
+    //                         'product_name' => $product['product_name']
+    //                     ];
+    //                 } 
+    //             } 
+    //         }
+    //         return $result;
+    //     }
+    // }    
 
     public  function getXMLData($url)
     {

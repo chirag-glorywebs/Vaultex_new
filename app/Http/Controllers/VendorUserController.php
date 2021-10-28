@@ -5,7 +5,10 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\User;
 use Session;
+use Helper;
+
 use Yajra\DataTables\Facades\DataTables;
+
 
 class VendorUserController extends Controller
 {
@@ -15,7 +18,7 @@ class VendorUserController extends Controller
         $page_title = 'Vendor Users';
         $page_description = 'All vendor users list page';
         if ($request->ajax()) {
-            $vendorUsers = User::where([['user_role', '=', '3']])->get();
+            $vendorUsers = User::where([['user_role', '=', Helper::getRollId('VENDOR')]]);
             return Datatables::of($vendorUsers)
                 ->addIndexColumn()
                 ->editColumn('profileImage', function ($image) {

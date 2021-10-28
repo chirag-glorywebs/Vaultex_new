@@ -1,5 +1,6 @@
 <?php
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 // Aside menu
 
@@ -16,14 +17,14 @@ $items = [
         'icon' => 'media/svg/icons/Design/Layers.svg', // or can be 'flaticon-home' or any flaticon-*
         'page' => 'admin/dashboard',
         'new-tab' => false,
-        'user_role_access' => [1],
+        'seller_access' =>false,
     ],
     [
         'title' => 'Users',
         'icon' => 'fa fa-users',
         'bullet' => 'dot',
         'root' => true,
-        'user_role_access' => [1],
+        'seller_access' =>false,
         'submenu' => [
             [
                 'title' => 'Admin Users',
@@ -33,11 +34,11 @@ $items = [
                 'submenu' => [
                     [
                         'title' => 'Add New',
-                        'page' => 'admin/adminuser/add'
+                        'page' => 'admin/adminuser/add',
                     ],
                     [
                         'title' => 'Lists',
-                        'page' => 'admin/adminuser/'
+                        'page' => 'admin/adminuser/',
                     ],
                 ],
             ],
@@ -49,11 +50,11 @@ $items = [
                 'submenu' => [
                     [
                         'title' => 'Add New',
-                        'page' => 'admin/salesuser/add'
+                        'page' => 'admin/salesuser/add',
                     ],
                     [
                         'title' => 'Lists',
-                        'page' => 'admin/salesuser/'
+                        'page' => 'admin/salesuser/',
                     ],
                 ],
             ],
@@ -65,18 +66,18 @@ $items = [
                 'submenu' => [
                     [
                         'title' => 'Add New',
-                        'page' => 'admin/vendoruser/add'
+                        'page' => 'admin/vendoruser/add',
                     ],
                     [
                         'title' => 'Lists',
-                        'page' => 'admin/vendoruser/'
+                        'page' => 'admin/vendoruser/',
                     ],
                 ],
             ],
             [
                 'title' => 'Customers',
                 'page' => 'admin/customers',
-                'icon' => 'media/svg/icons/Layout/Layout-4-blocks.svg'
+                'icon' => 'media/svg/icons/Layout/Layout-4-blocks.svg',
             ],
         ],
     ],
@@ -85,7 +86,7 @@ $items = [
         'icon' => 'fa fa-universal-access',
         'bullet' => 'dot',
         'root' => true,
-        'user_role_access' => [1],
+        'seller_access' =>false,
         'submenu' => [
             [
                 'title' => 'Brands',
@@ -111,7 +112,7 @@ $items = [
                 'submenu' => [
                     [
                         'title' => 'Add New',
-                        'page' => 'admin/category/add'
+                        'page' => 'admin/category/add',
                     ],
                     [
                         'title' => 'Lists',
@@ -127,11 +128,11 @@ $items = [
                 'submenu' => [
                     [
                         'title' => 'Add New',
-                        'page' => 'admin/attributes/add'
+                        'page' => 'admin/attributes/add',
                     ],
                     [
                         'title' => 'Lists',
-                        'page' => 'admin/attributes/'
+                        'page' => 'admin/attributes/',
                     ],
                 ],
             ],
@@ -163,7 +164,7 @@ $items = [
         'icon' => 'media/svg/icons/Code/Code.svg',
         'bullet' => 'line',
         'root' => true,
-        'user_role_access' => [1],
+        'seller_access' =>false,
         'submenu' => [
             [
                 'title' => 'Add New',
@@ -180,7 +181,8 @@ $items = [
         'icon' => 'fa fa-reorder',
         'bullet' => 'dot',
         'root' => true,
-        'user_role_access' => [1,2],
+        'seller_access' =>true,
+        'page_access' => ['admin/orders', 'admin/orders/*','admin/bulk-order','admin/bulk-order/*', 'admin/orderstatus', 'admin/orderstatus/*'],
         'submenu' => [
             [
                 'title' => 'Orders Status',
@@ -218,7 +220,7 @@ $items = [
         'icon' => 'fa fa-newspaper-o',
         'bullet' => 'line',
         'root' => true,
-        'user_role_access' => [1],
+        'seller_access' =>false,
         'submenu' => [
             [
                 'title' => 'Add Blog',
@@ -226,15 +228,15 @@ $items = [
             ],
             [
                 'title' => 'Blogs',
-                'page' => 'admin/blogs/'
+                'page' => 'admin/blogs/',
             ],
             [
                 'title' => 'Add Blog Category',
-                'page' => 'admin/blogcategories/add'
+                'page' => 'admin/blogcategories/add',
             ],
             [
                 'title' => 'Blog Categories',
-                'page' => 'admin/blogcategories/'
+                'page' => 'admin/blogcategories/',
             ],
 
         ],
@@ -244,7 +246,7 @@ $items = [
         'icon' => 'fa fa-columns',
         'bullet' => 'line',
         'root' => true,
-        'user_role_access' => [1],
+        'seller_access' =>false,
         'submenu' => [
             [
                 'title' => 'Add New',
@@ -266,7 +268,7 @@ $items = [
         'icon' => 'fa fa-file-image-o',
         'bullet' => 'line',
         'root' => true,
-        'user_role_access' => [1],
+        'seller_access' =>false,
         'submenu' => [
             [
                 'title' => 'Add New',
@@ -282,42 +284,30 @@ $items = [
         'title' => 'Home',
         'icon' => 'fa fa-home',
         'page' => 'admin/home-page/',
-        'user_role_access' => [1],
+        'seller_access' =>false,
 
     ],
     [
         'title' => 'Settings',
         'icon' => 'fa fa-gear',
         'page' => 'admin/settings/',
-        'user_role_access' => [1],
+        'seller_access' =>false,
     ],
     [
         'title' => 'Import',
         'icon' => 'fa fa-upload',
         'page' => 'admin/import/',
-        'user_role_access' => [1],
+        'seller_access' =>false,
     ],
     [
         'title' => 'Access Request',
         'icon' => 'fa fa-question',
         'page' => 'admin/vendor-enquiry/',
-        'user_role_access' => [1,2],
+        'seller_access' =>true,
+        'page_access' => ['admin/vendor-enquiry'],
     ],
 ];
 
-
-// $authUserRole = 1;
-// $displayMenus = [];
-// foreach ($items as $key => $value) {
-//     if($value['user_role_access']){
-//         if (in_array($authUserRole, $value['user_role_access'])) {            
-//             $displayMenus[] = $value;          
-//         }
-//     }
-// }
-
 $displayMenus = $items;
-
 $menuItems = ['items' => $displayMenus];
-
 return $menuItems;

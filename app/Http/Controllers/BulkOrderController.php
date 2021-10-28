@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Helper;
 use App\Http\Requests\StoreBulkOrder;
 use App\Models\BulkOrder;
 use App\Models\BulkOrderItem;
@@ -28,7 +29,16 @@ class BulkOrderController extends Controller
             /*$bulkOrderData = BulkOrder::leftJoin('bulk_order_items', 'bulk_order_items.order_id', '=', 'bulk_orders.id')
                 ->select('bulk_order_items.id', 'bulk_order_items.product_or_category_details', 'bulk_order_items.quantity', 'bulk_order_items.order_id', 'bulk_order_items.status', 'bulk_order_items.brand', 'bulk_orders.id', 'bulk_orders.name', 'bulk_orders.email', 'bulk_orders.phone', 'bulk_orders.description')
                 ->get();*/
-            $bulkOrderData = BulkOrder::all();
+            
+            $bulkOrderData = BulkOrder::select('bulk_orders.*');
+            $user = Auth::user();
+            if($user->user_role==Helper::getRollId('SALES')){
+                $bulkOrderData = $bulkOrderData
+                ->join('users', 'users.id', '=', 'bulk_orders.user_id')
+                ->where('users.salesperson', $user->id);
+            }            
+            $bulkOrderData = $bulkOrderData->get();
+
             return DataTables::of($bulkOrderData)
                 ->addIndexColumn()
                 ->editColumn('status', function ($bulkOrderList) {
