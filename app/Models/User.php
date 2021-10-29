@@ -8,6 +8,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Passport\HasApiTokens;
 use Mail;
+use Carbon\Carbon;
 
 
 class User extends Authenticatable
@@ -64,7 +65,16 @@ class User extends Authenticatable
     }
 
     public static function sendNotificationForCron($responseData)
-    {        
+    {     
+        
+        $cronLog = new CronLog;
+        $cronLog->message = $responseData['message'];
+        $cronLog->module = $responseData['function'];
+        $cronLog->status = 1;
+        $cronLog->created_at = Carbon::now()->format('Y-m-d H:i:s');
+        $cronLog->updated_at = Carbon::now()->format('Y-m-d H:i:s');
+        $cronLog->save();
+        
         $emailAddress = 'ranjitsinh@glorywebsdev.com';
         Mail::send('API.email.cron-notification', [
             'email' => $emailAddress,
