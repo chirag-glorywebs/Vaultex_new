@@ -61,8 +61,25 @@ class ProductsController extends BaseController
                     ->join('price_lists', 'products.sku', '=', 'price_lists.item_no') 
                     ->join('users', 'price_lists.price_list_no', '=', 'users.price_list_no')
                   /*   ->leftJoin('product_variant_combinations', 'products.id', '=', 'product_variant_combinations.product_id')  */
-                    ->select('products.id','products.product_name','products.product_type','products.regular_price','products.sale_price','products.category_id','products.main_image','products.medium_image','products.sku','products.slug','products.short_description','products.specification','products.trending_product','products.best_selling','price_lists.list_price AS uprice', DB::raw('COALESCE(price_lists.list_price, products.regular_price) as price'), DB::raw('COALESCE(CAST(((products.regular_price - price_lists.list_price) * 100 / products.regular_price) as decimal(5,2)),0) discount'))
-                     
+                    ->select(
+                        'products.id',
+                        'products.product_name',
+                        'products.product_type',
+                        'products.short_description',
+                        'products.regular_price',
+                        'products.sale_price',
+                        'products.category_id',
+                        'products.main_image',
+                        'products.medium_image',
+                        'products.sku',
+                        'products.slug',
+                        'products.specification',
+                        'products.trending_product',
+                        'products.best_selling',
+                        'price_lists.list_price AS uprice', 
+                        DB::raw('COALESCE(price_lists.list_price, products.regular_price) as price'), 
+                        DB::raw('COALESCE(CAST(((products.regular_price - price_lists.list_price) * 100 / products.regular_price) as decimal(5,2)),0) discount')
+                        )
                      ->where('users.id', '=', $user_id)
                      ->where('products.status', 1);
                      
@@ -70,7 +87,22 @@ class ProductsController extends BaseController
              }else{
                 $query =   DB::table('products')
                     ->select(
-                    'products.id','product_name','product_type','regular_price','sale_price','category_id','main_image','medium_image','sku','products.slug','short_description','specification','products.trending_product','products.best_selling',DB::raw('COALESCE(sale_price, regular_price) as price'),DB::raw('COALESCE(CAST(((products.regular_price - products.sale_price) * 100 / products.regular_price) as decimal(5,2)),0) discount')) 
+                    'products.id',
+                    'product_name',
+                    'product_type',
+                    'regular_price',
+                    'sale_price',
+                    'category_id',
+                    'main_image',
+                    'medium_image',
+                    'sku',
+                    'products.slug',
+                    'short_description',
+                    'specification',
+                    'products.trending_product',
+                    'products.best_selling',
+                    DB::raw('COALESCE(sale_price, regular_price) as price'),
+                    DB::raw('COALESCE(CAST(((products.regular_price - products.sale_price) * 100 / products.regular_price) as decimal(5,2)),0) discount')) 
                     ->where('products.status', 1);
              }
             
@@ -313,6 +345,8 @@ class ProductsController extends BaseController
             } else {
                 $data->tech_documents = null;
             }
+
+            $data->product_icons  =  (!empty($data->product_icons) && $data->product_icons) ? explode('|', $data->product_icons) : [];
 
             if (!empty($data->main_image) && file_exists($data->main_image)) {
                 $data->main_image = asset($data->main_image);

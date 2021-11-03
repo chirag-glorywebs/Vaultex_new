@@ -118,6 +118,12 @@ class Products extends Model
             'short_description' => [
                 'displayName' => 'short_description',
             ],
+            'features' => [
+                'displayName' => 'features',
+            ],
+            'product_icons' => [
+                'displayName' => 'product_icons',
+            ],
             'category_id' => [
                 'displayName' => 'category_id',
             ],

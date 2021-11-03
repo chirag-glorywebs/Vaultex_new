@@ -101,6 +101,8 @@ class ImportController extends Controller
                                                 && in_array('product_name', $headersArray)
                                                 && in_array('description', $headersArray)
                                                 && in_array('short_description', $headersArray)
+                                                && in_array('features', $headersArray)
+                                                && in_array('product_icons', $headersArray)               
                                                 && in_array('category_id', $headersArray)
                                                 && in_array('brand_id', $headersArray)
                                                 && in_array('main_image', $headersArray)
@@ -236,6 +238,8 @@ class ImportController extends Controller
                                 $product_name = trim($data[$i]['product_name']);
                                 $description = trim($data[$i]['description']);
                                 $short_description = trim($data[$i]['short_description']);
+                                $features = trim($data[$i]['features']);
+                                $product_icons = trim($data[$i]['product_icons']);
                                 $category_id = trim($data[$i]['category_id']);
                                 $brand_id = trim($data[$i]['brand_id']);
                                 $main_image = trim($data[$i]['main_image']);
@@ -354,7 +358,16 @@ class ImportController extends Controller
                                     $model->description = $description;
                                 }
                                 if (!empty($description)) {
+                                    $model->description = $description;
+                                }                               
+                                if (!empty($description)) {
                                     $model->short_description = $short_description;
+                                }
+                                if (!empty($features)) {
+                                    $model->features = $features;
+                                }
+                                if (!empty($product_icons)) {
+                                    $model->product_icons = $product_icons;
                                 }
                                 if (!empty($regular_price)) {
                                     $model->regular_price = $regular_price;
@@ -572,8 +585,8 @@ class ImportController extends Controller
                 }
             }
         } catch (\Exception $e) {
-            // Session::flash('message', $e->getLine().' - '.$e->getFile().' - '.$e->getMessage());
-            Session::flash('message', 'Something went wrong.');
+            Session::flash('message', $e->getLine().' - '.$e->getFile().' - '.$e->getMessage());
+            // Session::flash('message', 'Something went wrong.');
             return redirect('/admin/import');
         }
     }
