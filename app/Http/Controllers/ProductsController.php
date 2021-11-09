@@ -16,6 +16,8 @@ use App\Models\Reviews;
 use App\Models\Faqs;
 use App\Models\User;
 use App\Models\ProductAttribute;
+use App\Models\ProductCategory;
+use Carbon\Carbon;
 use Auth;
 use DB;
 use Image;
@@ -93,7 +95,7 @@ class ProductsController extends Controller
         $req->validate([
             'product_name' => 'required',
             'product_type' => 'required',
-            'category_id' => 'required',
+            'category_id' => 'required|array',
             'brand_id' => 'required',
             'main_image' => 'required',
             'sku' => 'required',
@@ -109,7 +111,7 @@ class ProductsController extends Controller
 
         $products->product_name = $req->product_name;
         $products->product_type = $req->product_type;
-        $products->category_id = $req->category_id;
+        // $products->category_id = $req->category_id;
         $products->brand_id = $req->brand_id;
        
         if ($req->hasFile('main_image')) {
@@ -183,7 +185,11 @@ class ProductsController extends Controller
         $products->status = $req->status;
         $user = Auth::user();
         $products->userid = $user->id;
-        $products->save();
+        if($products->save()){
+            $productId = $products->id;
+            $categoryId = $req->category_id;            
+            $assignCategory = ProductCategory::assignProductCategories($productId, $categoryId);
+        }
         Session::flash('message', 'Successfully added!');
         return redirect('/admin/products/edit/' . $products->id . '');
     }
@@ -244,8 +250,7 @@ class ProductsController extends Controller
     {
         $page_title = 'Edit product';
         $page_description = 'Edit product info';
-        $products = Products::select( 'product_details.id as pd_id', 'product_details.*','products.*')->leftJoin('product_details','products.id','=','product_details.product_id')->find($id);
-         
+        $products = Products::with('productCategories')->select( 'product_details.id as pd_id', 'product_details.*','products.*')->leftJoin('product_details','products.id','=','product_details.product_id')->find($id);
         $category = Categories::with('childCategoires')->whereNull('parent_category')->select('id','category_name','parent_category')->where('status',1)->orderby('category_name','ASC')->get(); 
         $brand = Brand::all();
         $attribute = Attributes::where([['status', '=',1]])->get();
@@ -295,7 +300,7 @@ class ProductsController extends Controller
         $req->validate([
             'product_name' => 'required',
             'product_type' => 'required',
-            'category_id' => 'required',
+            'category_id' => 'required|array',
             'brand_id' => 'required',
             'sku' => 'required',
             'regular_price' => 'required|regex:/^\d+(\.\d{1,2})?$/',
@@ -316,7 +321,8 @@ class ProductsController extends Controller
         //For Unique slug Start
          $products->slug = slugify($req->slug);
         //For Unique slug End
-        $products->category_id = $req->category_id;
+        // $categoriesId = implode(',',$req->category_id);
+        // $products->category_id = $categoriesId;
         $products->brand_id = $req->brand_id;
         $mainImage = $req->get('old_main_image');
         if ($req->hasFile('main_image')) {
@@ -404,12 +410,16 @@ class ProductsController extends Controller
         
         $products->video = $videoImage;
         $products->download_datasheet = $downloadDatasheet;
-        $products->save();
+        if($products->save()){
+            $productId = $req->id;
+            $categoryId = $req->category_id;
+            $assignCategory = ProductCategory::assignProductCategories($productId, $categoryId);
+        }
+
         Session::flash('message', 'Successfully updated!');
         return redirect('/admin/products/edit/' . $req->id . '');
     }
 
-    
 /* update product gallery*/
     public function updateGallery(Request $req)
     {

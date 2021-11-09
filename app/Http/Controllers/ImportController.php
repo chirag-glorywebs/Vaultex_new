@@ -15,6 +15,7 @@ use App\Models\ProductDetail;
 use App\Models\Products;
 use App\Models\Product_feature_videos;
 use App\Models\Product_training_videos;
+use App\Models\ProductCategory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
@@ -452,6 +453,7 @@ class ImportController extends Controller
                                 $explodeCats = explode('>', $category_id);
                                 $parentid = 0;
 
+                                $productCategoriesArr = [];
                                 foreach ($explodeCats as $cat) {
                                     $catData = Categories::where('category_name', trim($cat))->first('id');
                                     if (!empty($catData)) {
@@ -468,8 +470,11 @@ class ImportController extends Controller
                                         $catId = $newCat->id;
                                         $parentid = $newCat->id;
                                     }
+                                    $productCategoriesArr[] = $catId;
+
                                 }
-                                $model->category_id = $catId;
+
+                                // $model->category_id = $catId;
 
 
                                 $brandData = Brand::where('brand_name', $brand_id)->first('id');
@@ -562,7 +567,16 @@ class ImportController extends Controller
                                 $model->trending_product = ($trending_product) ? $trending_product : 0;
                                 $model->best_selling = ($best_selling) ? $best_selling : 0;
                                 $model->bid_quote = ($bid_quote) ? $bid_quote : 0;
-                                $model->save();
+                                // if($model->save()){
+                                //     dd($productCategoriesArr);
+                                // }
+                                if($model->save()){
+                                    $productId = $model->id;
+                                    if(count($productCategoriesArr) > 0){                                        
+                                        $assignCategory = ProductCategory::assignProductCategories($productId, $productCategoriesArr);
+                                    }
+                                }
+                                
                                 // if (!in_array($model->sku, ['MDU', 'UBA', 'SGT', 'SGK'])){
                                 //     dd($model->sku);
                                 // }

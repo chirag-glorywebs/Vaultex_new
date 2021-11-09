@@ -9,6 +9,7 @@ use App\Models\Categories;
 use App\Models\ProductDetail;
 use App\Models\ProductAttribute;
 use App\Models\ProductVariantCombination;
+use App\Models\ProductCategory;
 
 class Products extends Model
 {
@@ -31,6 +32,11 @@ class Products extends Model
     {
         return $this->hasMany(ProductAttribute::class, 'product_id', 'id');
     }
+
+    public function productCategories()
+    {
+        return $this->hasMany(ProductCategory::class, 'product_id', 'id');
+    }    
 
     public function productDetails()
     {

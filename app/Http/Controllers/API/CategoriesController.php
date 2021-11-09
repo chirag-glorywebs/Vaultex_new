@@ -29,7 +29,9 @@ class CategoriesController extends BaseController
                     ->where('status',1)
                     ->orderby($orderby,$order);  */
         
-        $query = Categories::with('childCategoires')->whereNull('parent_category')->select('id','category_name','parent_category','logo','category_description','slug')
+        $query = Categories::with('childCategoires')
+        ->whereNull('parent_category')
+        ->select('id','category_name','parent_category','logo','category_description','slug')
         ->where('status',1)->orderby($orderby,$order); 
 
         if($parent > 0){
@@ -75,7 +77,9 @@ class CategoriesController extends BaseController
 function productCategoryList($slug)
     {
         # code...
-        $item =  Categories::select('id','category_name','parent_category','logo','category_description','slug')->with('childCategoires')
+        $item =  Categories::select('id','category_name','parent_category','logo','category_description','slug')
+                    ->with('parents')
+                    ->with('childCategoires')
                     ->where('status',1)
                     ->where('slug',$slug)
                     ->first();

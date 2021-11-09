@@ -79,10 +79,16 @@
                             </select>
                         </div>
                         <div class="form-group">
+                            @php                                
+                                $productCategories = (isset($products) && $products) ? $products->productCategories->toArray() : [];
+                                if(isset($productCategories)) {
+                                    $productCategoryIds = @array_column($productCategories, 'category_id');
+                                }
+                            @endphp                           
+                            
                             <label>Category: <span style="color:red">*</span></label>
-                            <select class="form-control select2" id="category_id" name="category_id">
-                                <option value="">Select</option>
-                             
+                            <select class="form-control select2" multiple id="category_id" name="category_id[]">
+                                {{-- <option value="">Select</option> --}}                             
                             @php
                                 
                                 $edit_cat =  ( isset($products['category_id'])) ? $products['category_id'] : "";
@@ -1071,9 +1077,13 @@
         $('#product_type').select2({
             placeholder: "Select product type"
         });
+
+        var updatedDataArr = @json($productCategoryIds);        
+        $('#category_id').val(updatedDataArr);
         $('#category_id').select2({
-            placeholder: "Select category"
+            placeholder: "Select category",
         });
+
         $('#brand_id').select2({
             placeholder: "Select brand"
         });

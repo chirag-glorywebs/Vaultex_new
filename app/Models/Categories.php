@@ -39,4 +39,17 @@ class Categories extends Model
     {
      return $this->children()->with('childCategoires')->WHERE('status',1);
     }
+
+
+    // One level parent
+    public function parent() {
+        return $this->belongsTo(Categories::class,'parent_category')->select(['id', 'category_name', 'slug', 'parent_category']);
+    }
+
+    // Recursive parents
+    public function parents() {
+        return $this->belongsTo(Categories::class, 'parent_category')->select(['id', 'category_name', 'slug', 'parent_category'])
+          			->with('parent');
+    }
+
 }

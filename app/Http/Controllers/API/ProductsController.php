@@ -229,14 +229,22 @@ class ProductsController extends BaseController
             $categoryIds = Categories::where('parent_category', $cat_id)->pluck('id')->all(); 
             $childCatData = Categories::whereIn('parent_category',$categoryIds)->pluck('id')->all();
          
-            $query->join('categories','categories.id','=','products.category_id');
-            $query->where(function ($q) use($cat_id, $categoryIds, $childCatData ) {
-               // $q->where('categories.parent_category',$cat_id)
-                $q->where('products.category_id',$cat_id)
-                ->orWhereIn('products.category_id',$categoryIds)
-                ->orWhereIn('products.category_id',$childCatData); 
+            // $query->join('categories','categories.id','=','products.category_id');                        
+            $query->join('product_categories', function($join) use($cat_id, $categoryIds, $childCatData){
+                // $join->where('categories.id', '=', 'product_categories.category_id');
+                $join->on('product_categories.product_id', '=', 'products.id');
+                $join->where('product_categories.category_id', '=', $cat_id);
+                $join->orWhereIn('product_categories.category_id',$categoryIds);
+                $join->orWhereIn('product_categories.category_id',$childCatData);
             });
-           
+            
+            // $query->where(function ($q) use($cat_id, $categoryIds, $childCatData ) {
+            //    // $q->where('categories.parent_category',$cat_id)
+            //     $q->where('products.category_id',$cat_id)
+            //     ->orWhereIn('products.category_id',$categoryIds)
+            //     ->orWhereIn('products.category_id',$childCatData); 
+            // });
+
             $cat_data = Categories::select('id','parent_category')->where('id', $cat_id)->first();
             if(!empty($cat_data->parent_category)){
                 $parent_cats = Categories::select('id','category_name AS name','slug')->where('parent_category', $cat_data->parent_category)->where('id','!=',$cat_id)->get();
