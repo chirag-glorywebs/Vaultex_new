@@ -34,11 +34,11 @@ class ProductsController extends Controller
         $page_title = 'Products';
         $page_description = 'All products list page';
         if ($request->ajax()) {
-             $products = Products::leftJoin('categories', 'categories.id', '=', 'products.category_id')
-                ->leftJoin('brands', 'brands.id', '=', 'products.brand_id')
-                ->select('products.*', 'categories.category_name', 'brands.brand_name');
-                // ->get();  
-            
+             $products = Products::leftJoin('brands', 'brands.id', '=', 'products.brand_id')
+            //  ->leftJoin('categories', 'categories.id', '=', 'products.category_id')
+            ->select('products.*', 'brands.brand_name')
+            ->WITH('productCategories');            
+            // ->get();
 
          /*    $products = Products::join('brands', 'brands.id', '=', 'products.brand_id')
             ->select('products.*', 'brands.brand_name')

@@ -147,12 +147,26 @@ div.dataTables_wrapper div.dataTables_processing {
                     },
                     {
                         sTitle: "Category",
-                        data: "category_name", 
-                        name: "categories.category_name",
-                        orderable: true,
-                        searchable: true,
-                        render: function(data, type, row, meta) {
-                            var str = (data) ? data : '';
+                        data: "product_categories", 
+                        name: "product_categories",
+                        orderable: false,
+                        searchable: false,
+                        render: function(data, type, row, meta) { 
+                            var str = '';
+                            var categoryArr = []; 
+                            if(data.length>0){
+                                data.forEach(element => {
+                                    if(element.category_name){
+                                        // var categoryHtml = '';
+                                        // categoryHtml += '<div class="badge-default m-2">';
+                                        //     categoryHtml += element.category_name; 
+                                        // categoryHtml+='</div>';
+                                        // categoryArr += categoryHtml; //push(categoryHtml);                                  
+                                        categoryArr.push(element.category_name);
+                                    }
+                                });
+                                str = categoryArr.toString();  
+                            }
                             return str;
                         }                
                     },

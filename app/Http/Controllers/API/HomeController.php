@@ -168,19 +168,39 @@ class HomeController extends BaseController
                     $join->on('products.id', '=', 'liked_products.liked_products_id')
                          ->on('users.id', '=', 'liked_products.liked_customers_id');
                 }) 
-                ->select('products.id','products.category_id','products.product_name','products.product_type', 'products.thumbnail_image', 'products.medium_image','products.main_image','products.sku','products.slug','price_lists.list_price AS uprice', DB::raw('COALESCE(price_lists.list_price, products.regular_price) as price'),'liked_products.id as wishlist')
+                ->select(
+                    'products.id',
+                    'products.product_name',
+                    'products.product_type', 
+                    'products.thumbnail_image', 
+                    'products.medium_image',
+                    'products.main_image',
+                    'products.sku',
+                    'products.slug',
+                    'price_lists.list_price AS uprice', 
+                    DB::raw('COALESCE(price_lists.list_price, products.regular_price) as price'),
+                    'liked_products.id as wishlist')
                 ->where('users.id', '=', $user_id) 
                 ->where('products.status', 1)
                 ->orderBy('id', 'ASC');
 
                 $categoryIds = Categories::where('parent_category', $cat_id)->where('status', 1)->pluck('id')->all(); 
                 $childCatData = Categories::whereIn('parent_category',$categoryIds)->where('status',1)->pluck('id')->all();
-                $cat_products_query->where(function ($q) use($cat_id, $categoryIds, $childCatData ) { 
-                    $q->where('products.category_id',$cat_id)
-                    ->orWhereIn('products.category_id',$categoryIds)
-                    ->orWhereIn('products.category_id',$childCatData); 
+                // $cat_products_query->where(function ($q) use($cat_id, $categoryIds, $childCatData ) { 
+                //     $q->where('products.category_id',$cat_id)
+                //     ->orWhereIn('products.category_id',$categoryIds)
+                //     ->orWhereIn('products.category_id',$childCatData); 
+                // });                
+
+                $cat_products_query->join('product_categories', function($join) use($cat_id, $categoryIds, $childCatData){
+                    // $join->where('categories.id', '=', 'product_categories.category_id');
+                    $join->on('product_categories.product_id', '=', 'products.id');
+                    $join->where('product_categories.category_id', '=', $cat_id);
+                    // $join->orWhereIn('product_categories.category_id',$categoryIds);
+                    // $join->orWhereIn('product_categories.category_id',$childCatData);
                 });
                 $cc_products = $cat_products_query->get();
+
                 foreach ($cc_products as $items) {
                     if (!empty($items->thumbnail_image) && file_exists($items->thumbnail_image)) {
                        $items->main_image = asset($items->thumbnail_image);
@@ -201,17 +221,26 @@ class HomeController extends BaseController
                    /*  array_merge($cat_products[$key]['products'],$cat_products);  */
                  }
             }    
-        }else{
+        } else {
+            
             foreach($cat_products as  $key=>$cat_data ){
                 $cc_products = null;
                 $cat_id = $cat_data['id'];
                 $cat_products_query = DB::table('products')->select('products.id', 'products.product_name', 'products.sku', 'products.regular_price', 'products.sale_price', 'products.thumbnail_image', 'products.medium_image','products.main_image', 'products.slug')->where('products.status', 1)->take(10)->orderBy('id', 'DESC');
                 $categoryIds = Categories::where('parent_category', $cat_id)->where('status', 1)->pluck('id')->all(); 
                 $childCatData = Categories::whereIn('parent_category',$categoryIds)->where('status', 1)->pluck('id')->all();
-                $cat_products_query->where(function ($q) use($cat_id, $categoryIds, $childCatData ) { 
-                    $q->where('products.category_id',$cat_id)
-                    ->orWhereIn('products.category_id',$categoryIds)
-                    ->orWhereIn('products.category_id',$childCatData); 
+                // $cat_products_query->where(function ($q) use($cat_id, $categoryIds, $childCatData ) { 
+                //     $q->where('products.category_id',$cat_id)
+                //     ->orWhereIn('products.category_id',$categoryIds)
+                //     ->orWhereIn('products.category_id',$childCatData); 
+                // });
+
+                $cat_products_query->join('product_categories', function($join) use($cat_id, $categoryIds, $childCatData){
+                    // $join->where('categories.id', '=', 'product_categories.category_id');
+                    $join->on('product_categories.product_id', '=', 'products.id');
+                    $join->where('product_categories.category_id', '=', $cat_id);
+                    // $join->orWhereIn('product_categories.category_id',$categoryIds);
+                    // $join->orWhereIn('product_categories.category_id',$childCatData);
                 });
                 $cc_products = $cat_products_query->get();
                 foreach ($cc_products as $items) {
@@ -261,7 +290,9 @@ class HomeController extends BaseController
                 $join->on('products.id', '=', 'liked_products.liked_products_id')
                      ->on('users.id', '=', 'liked_products.liked_customers_id');
             }) 
-            ->select('products.id','products.category_id','products.product_name','products.product_type','products.thumbnail_image', 'products.medium_image','products.main_image','products.sku','products.slug','price_lists.list_price AS uprice', DB::raw('COALESCE(price_lists.list_price, products.regular_price) as price'),'liked_products.id as wishlist')
+            ->select('products.id',
+            // 'products.category_id',
+            'products.product_name','products.product_type','products.thumbnail_image', 'products.medium_image','products.main_image','products.sku','products.slug','price_lists.list_price AS uprice', DB::raw('COALESCE(price_lists.list_price, products.regular_price) as price'),'liked_products.id as wishlist')
             ->where('users.id', '=', $user_id) 
             ->where('products.status', 1)
             ->take(10)->orderBy('products.id', 'ASC')->get();

@@ -425,8 +425,7 @@ class ImportController extends Controller
                                     $model->large_image = resizeImageByURL($main_image, 600, 600, 'large', true);
                                     $model->main_image  = uplodImageByURL($main_image, true);
                                 }
-
-                                if (!empty($video)) {
+                                
                                     if (!empty($model->video)) {
                                         $destinationPath = $model->video;
                                         $fileExists = file_exists($destinationPath);
@@ -435,8 +434,9 @@ class ImportController extends Controller
                                             File::delete($destinationPath);
                                         }
                                     }
-                                    $model->video  = uplodImageByURL($video);
-                                }
+                                    if (!empty($video)) {
+                                        $model->video  = uplodImageByURL($video);
+                                    }
 
                                 if (!empty($download_datasheet)) {
                                     if (!empty($model->download_datasheet)) {

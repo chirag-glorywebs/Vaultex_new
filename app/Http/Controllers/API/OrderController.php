@@ -235,6 +235,8 @@ class OrderController extends BaseController
                 'products.sale_price',
                 'products.category_id',
                 'products.main_image',
+                'products.medium_image',
+                'products.thumbnail_image',
                 'products.sku',
                 'products.slug',
                 'products.short_description',
@@ -253,13 +255,13 @@ class OrderController extends BaseController
             ->where('orders.userid', $user_id)
             ->orderby($orderby, $order)
             ->get();
-
+            
         foreach ($data as $mainimg) {
 
             
-        if(!empty($mainimg->wishlist) && ($mainimg->wishlist) != NULL){
-            $mainimg->wishlist = TRUE;
-        }
+            if(!empty($mainimg->wishlist) && ($mainimg->wishlist) != NULL){
+                $mainimg->wishlist = TRUE;
+            }
 
             $estdate = date('Y-m-d H:i:s', strtotime(' +2 day'));
             $mainimg->estimate_delivery_date  = $estdate;
@@ -267,6 +269,16 @@ class OrderController extends BaseController
                 $mainimg->main_image = asset($mainimg->main_image);
             } else {
                 $mainimg->main_image = asset('uploads/placeholder-medium.jpg');
+            } 
+            if (!empty($mainimg->medium_image) && file_exists($mainimg->medium_image)) {
+                $mainimg->medium_image = asset($mainimg->medium_image);
+            } else {
+                $mainimg->medium_image = asset('uploads/placeholder-medium.jpg');
+            } 
+            if (!empty($mainimg->thumbnail_image) && file_exists($mainimg->thumbnail_image)) {
+                $mainimg->thumbnail_image = asset($mainimg->thumbnail_image);
+            } else {
+                $mainimg->thumbnail_image = asset('uploads/placeholder-medium.jpg');
             } 
         }
         return $this->sendResponse($data, 'Order items list');
@@ -291,8 +303,10 @@ class OrderController extends BaseController
                 'products.product_name',
                 'products.regular_price',
                 'products.sale_price',
-                'products.category_id',
+                'products.category_id',                
                 'products.main_image',
+                'products.medium_image',
+                'products.thumbnail_image',
                 'products.sku',
                 'products.slug',
                 'products.short_description',
