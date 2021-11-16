@@ -41,16 +41,14 @@ class VendorEmailController extends BaseController
             'name' => 'required|string|min:3',
             'code' => 'required|string|min:3',
             'email' => 'required|string|email|unique:vendor_emails',
-            ]);
-       
-     
-        
+            ]);      
+             
         $user =  DB::table('users')->where('name', $request->name)->where('vendor_code', $request->code)->first();
         if($user){
-            $userwithEmail =  DB::table('users')->where('email', $request->email)->first();
-            if($userwithEmail){
-                return $this->sendError(false, 'This email address is already used by other user. Please try again with different email address.',200);
-            }else{
+            // $userwithEmail =  DB::table('users')->where('email', $request->email)->first();
+            // if($userwithEmail){
+            //     return $this->sendError(false, 'This email address is already used by other user. Please try again with different email address.',200);
+            // }else{
                 $VEInfo =  DB::table('vendor_emails')->where('vendor_name', $request->name)->where('vendor_code', $request->code)->first();
                 if(!empty($VEInfo)){
                     return $this->sendResponse(true, 'You already submited before. We will do proceed with your request as soon as possible Thank you for contacting us.');
@@ -62,7 +60,7 @@ class VendorEmailController extends BaseController
                 $newVendorInfo->save();
                 return $this->sendResponse(true, 'Your request has been sucessfully submited one of our sale person will contact you soon.');
                 }
-             }
+        //  }
         }else{
             return $this->sendError(false, 'User does not exist. Please try again');
         }

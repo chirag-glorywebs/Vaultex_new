@@ -68,15 +68,13 @@ class VendorEnquiryController extends Controller
         DB::table('password_resets')->insert(
             ['email' => $request->email, 'token' => $token, 'created_at' => Carbon::now(), 'updated_at' => Carbon::now()]
         );
-        /* Mail::send('API.email.email-verify', ['token' => $token], function($message) use($email){
-             $message->to($email);
-             $message->subject('Reset Password Notification');
-         });*/
+       
         Mail::send('API.email.email-verify', [
             'email' => $request->email,
             'token' => $token,
             'reset_url' => route('password.update', ['token' => $token, 'email' => $request->email]),
         ], function ($message) use ($request) {
+            //Vendor access Request
             $message->subject('Reset Password Request');
             $message->to($request->email);
         });

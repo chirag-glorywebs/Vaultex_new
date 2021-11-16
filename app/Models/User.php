@@ -67,6 +67,10 @@ class User extends Authenticatable
     public static function sendNotificationForCron($responseData)
     {     
         
+        $message = $responseData['message'];
+        if($responseData['error']){
+            $message .= $responseData['error'];
+        }
         $cronLog = new CronLog;
         $cronLog->message = $responseData['message'];
         $cronLog->module = $responseData['function'];

@@ -100,8 +100,8 @@ class ImportDataController extends Controller
             return response()->json($responseData,200); 
         } catch (\Exception $e) {
             $responseData = [
-                'message'=>'Something went wrong.',
-                'error'=>$e->getLine().' - '.$e->getFile().' - '.$e->getMessage(),
+                'message'=>$e->getLine().' - '.$e->getFile().' - '.$e->getMessage(),
+                'error'=>'',
                 'function' => 'vendorImport'
             ];
             $send = User::sendNotificationForCron($responseData);
