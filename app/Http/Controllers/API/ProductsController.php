@@ -68,9 +68,10 @@ class ProductsController extends BaseController
                         'products.short_description',
                         'products.regular_price',
                         'products.sale_price',
-                        'products.category_id',
+                        // 'products.category_id',
                         'products.main_image',
                         'products.medium_image',
+                        'products.thumbnail_image',                        
                         'products.sku',
                         'products.slug',
                         'products.specification',
@@ -92,9 +93,10 @@ class ProductsController extends BaseController
                     'product_type',
                     'regular_price',
                     'sale_price',
-                    'category_id',
+                    // 'category_id',
                     'main_image',
                     'medium_image',
+                    'thumbnail_image',
                     'sku',
                     'products.slug',
                     'short_description',
@@ -223,7 +225,6 @@ class ProductsController extends BaseController
                    }
                 } 
 
-
         $parent_cats = array();
         if ($cat_id > 0) {
             $categoryIds = Categories::where('parent_category', $cat_id)->pluck('id')->all(); 
@@ -234,8 +235,8 @@ class ProductsController extends BaseController
                 // $join->where('categories.id', '=', 'product_categories.category_id');
                 $join->on('product_categories.product_id', '=', 'products.id');
                 $join->where('product_categories.category_id', '=', $cat_id);
-                $join->orWhereIn('product_categories.category_id',$categoryIds);
-                $join->orWhereIn('product_categories.category_id',$childCatData);
+                // $join->orWhereIn('product_categories.category_id',$categoryIds);
+                // $join->orWhereIn('product_categories.category_id',$childCatData);
             });
             
             // $query->where(function ($q) use($cat_id, $categoryIds, $childCatData ) {
@@ -278,6 +279,12 @@ class ProductsController extends BaseController
                 $item->medium_image = asset($item->medium_image);
             }else{
                 $item->medium_image = asset('uploads/placeholder-medium.jpg');
+            }
+
+            if (!empty($item->thumbnail_image) && file_exists($item->thumbnail_image)) {
+                $item->thumbnail_image = asset($item->thumbnail_image);
+            }else{
+                $item->thumbnail_image = asset('uploads/placeholder-medium.jpg');
             }
             // if (!empty($item->medium_image) && file_exists($item->medium_image)) {
             //     $item->main_image = asset($item->medium_image);
@@ -993,7 +1000,21 @@ class ProductsController extends BaseController
             $ids_ordered = implode(',', array_reverse($request->include));
            
             $query =  Products::select(
-                'id','product_name','product_type','regular_price','sale_price','category_id','main_image','sku','slug','short_description','specification',DB::raw('COALESCE(sale_price, regular_price) as price'),DB::raw('COALESCE(CAST(((products.regular_price - products.sale_price) * 100 / products.regular_price) as decimal(5,2)),0) discount'))
+                'id',
+                'product_name',
+                'product_type',
+                'regular_price',
+                'sale_price',
+                // 'category_id',                
+                'main_image',
+                'medium_image',
+                'thumbnail_image',
+                'sku',
+                'slug',
+                'short_description',
+                'specification',
+                DB::raw('COALESCE(sale_price, regular_price) as price'),
+                DB::raw('COALESCE(CAST(((products.regular_price - products.sale_price) * 100 / products.regular_price) as decimal(5,2)),0) discount'))
                 ->selectRaw('LEAST(regular_price,sale_price) AS price')
                 ->where('status', 1);
              $query->whereIn('id', $request->include);
@@ -1006,6 +1027,16 @@ class ProductsController extends BaseController
                         $item->main_image = asset($item->main_image);
                     } else {
                         $item->main_image = asset('uploads/product-placeholder.png');
+                    }
+                    if (!empty($item->medium_image) && file_exists($item->medium_image)) {
+                        $item->medium_image = asset($item->medium_image);
+                    } else {
+                        $item->medium_image = asset('uploads/placeholder-medium.jpg');
+                    }
+                    if (!empty($item->thumbnail_image) && file_exists($item->thumbnail_image)) {
+                        $item->thumbnail_image = asset($item->thumbnail_image);
+                    } else {
+                        $item->thumbnail_image = asset('uploads/placeholder-medium.jpg');
                     }
                     $wishlist = false;
                     $uprice = null;
