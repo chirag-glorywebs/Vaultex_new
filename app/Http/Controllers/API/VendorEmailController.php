@@ -31,10 +31,14 @@ class VendorEmailController extends BaseController
         $otp = rand(100000, 999999);
 
         $user = User::query()
-            ->where('mobile', $request->mobile)
-            ->where('vendor_code', $request->code)
+            ->whereMobile($request->mobile)
             ->first();
-        if (!$user) {
+
+        if ($user) {
+            if ($user->vendor_code != $request->code) {
+                return $this->sendError(true, 'Mobile number already registered');
+            }
+        } else {
             $user = new User();
             $user->mobile = $request->mobile;
             $user->vendor_code = $request->code;
@@ -79,6 +83,41 @@ class VendorEmailController extends BaseController
             return $this->sendResponse(true, "OTP verify successfully");
         }
         return $this->sendError(false, 'Invalid OTP. Please try again');
+    }
+
+    /**
+     * Resend OTP to Vendor Mobile Number api
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function resendOtp(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'code' => 'required|string|min:3',
+            'mobile' => 'required|string|min:3',
+        ]);
+
+        $otp = rand(100000, 999999);
+
+        $user = User::query()
+            ->whereMobile($request->mobile)
+            ->whereVendorCode($request->code)
+            ->first();
+        $user->otp = $otp;
+        $user->save();
+
+        $response = Http::get('https://smpplive.com/api/send_sms/single_sms', [
+            'to' => "91" . $request->mobile,
+            'username' => 'inventmedia',
+            'password' => 'In@R5304',
+            'from' => 'SKYOTP',
+            'content' => "$otp from Vaultex Project"
+        ]);
+
+        if ($response->successful()) {
+            return $this->sendResponse(true, "OTP resent successfully");
+        }
+        return $this->sendError(true, $response->failed());
     }
 
     /**

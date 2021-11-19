@@ -53,6 +53,7 @@ Route::post('/facebookLogin', [FacebookController::class, 'facebookLogin'])->nam
 
 Route::post('/send-otp', [VendorEmailController::class, 'sendOtp'])->name('api.sendOtp');
 Route::post('/verify-otp', [VendorEmailController::class, 'verifyOtp'])->name('api.verifyOtp');
+Route::post('/resend-otp', [VendorEmailController::class, 'resendOtp'])->name('api.resendOtp');
 Route::post('/send-forget-password-email', [VendorEmailController::class, 'sendForgetPasswordEmail'])->name('api.sendForgetPasswordEmail');
 Route::post('/verifyVendorInfo', [VendorEmailController::class, 'verifyVendor'])->name('api.verifyVendorInfo');
 Route::post('/submitVendorInfo', [VendorEmailController::class, 'store'])->name('api.submitVendorInfo');
