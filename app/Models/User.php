@@ -6,6 +6,7 @@ use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\URL;
 use Laravel\Passport\HasApiTokens;
 use Mail;
 use Carbon\Carbon;
@@ -67,24 +68,28 @@ class User extends Authenticatable
     public static function sendNotificationForCron($responseData)
     {     
         
-        $message = $responseData['message'];
+        $responseMessage = $responseData['message'];
         if($responseData['error']){
-            $message .= $responseData['error'];
+            $responseMessage .= json_encode($responseData['error']);
         }
+
+        $dateBeforeDays  = Carbon::now()->subDays(15);
+        $deletedRecords = CronLog::where( 'updated_at', '<=', $dateBeforeDays )->delete();
+
         $cronLog = new CronLog;
         $cronLog->message = $responseData['message'];
         $cronLog->module = $responseData['function'];
         $cronLog->status = 1;
         $cronLog->created_at = Carbon::now()->format('Y-m-d H:i:s');
         $cronLog->updated_at = Carbon::now()->format('Y-m-d H:i:s');
-        $cronLog->save();
+        $cronLog->save();        
         
         $emailAddress = 'ranjitsinh@glorywebsdev.com';
         Mail::send('API.email.cron-notification', [
             'email' => $emailAddress,
             'data' => $responseData
         ], function ($message) use ($emailAddress) {
-            $message->subject('Notification for cron.');
+            $message->subject('Notification for cron. - '.URL::to(''));
             $message->to($emailAddress);
         });
     }

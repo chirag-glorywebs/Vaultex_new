@@ -44,9 +44,19 @@ class ImportDataController extends Controller
             $icout = 0;
             $ucout = 0;
             foreach($vendorArr as $vendor){
-                $salesperson = User::select('id')->where('vendor_code', '=',  $vendor->SlpCode)
-                ->where('user_role', '=',  2)->first();
-                
+
+                $salesperson = User::select('id')
+                    ->where('email', '=',  $vendor->SlpCode)
+                    ->where('user_role', '=',  2)
+                    ->first();
+   
+                if(empty($salesperson)){
+                    $salesperson = User::select('id')
+                    ->where('id', '=',  9113)
+                    ->where('user_role', '=',  2)
+                    ->first();
+                }
+
                 if(isset($vendor->CardCode) && !empty($vendor->CardCode) 
                     && isset($vendor->CardName) && !empty($vendor->CardName) 
                     && isset($vendor->ListNum) && !empty($vendor->ListNum) && (!empty($salesperson))){
@@ -100,8 +110,8 @@ class ImportDataController extends Controller
             return response()->json($responseData,200); 
         } catch (\Exception $e) {
             $responseData = [
-                'message'=>$e->getLine().' - '.$e->getFile().' - '.$e->getMessage(),
-                'error'=>'',
+                'message'=>'Something went wrong.',
+                'error'=>$e->getLine().' - '.$e->getFile().' - '.$e->getMessage(),
                 'function' => 'vendorImport'
             ];
             $send = User::sendNotificationForCron($responseData);
@@ -377,14 +387,14 @@ class ImportDataController extends Controller
                 'function' => 'productImport'
             ];
             $send = User::sendNotificationForCron($responseData);
-            return response()->json($responseData, 200); 
+            return response()->json($responseData, 200);
         }
        
     }
 
     //Import product proice list for vendor
     public function productPriceImport()
-    {
+    {      
 
         try {
             
@@ -429,7 +439,7 @@ class ImportDataController extends Controller
                         'list_price' =>  $productPrice->Price,
                         'price_list_no' =>  $productPrice->PriceList,
                     ]);   */
-            }       
+                }       
             } 
 
             // return response()->json(['message'=>'totla '. $count.'recored  inserted '. $insertcount],200);

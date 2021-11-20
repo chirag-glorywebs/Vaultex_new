@@ -170,8 +170,8 @@ class UserProductVideoController extends BaseController
 
         } catch (\Exception $e) {
             $responseData = [
-                'message'=>$e->getLine().' - '.$e->getFile().' - '.$e->getMessage(),
-                'error'=>'',
+                'message'=>'Something Went Wrong.',
+                'error'=>$e->getLine().' - '.$e->getFile().' - '.$e->getMessage(),
                 'function' => 'waterMarkVideo'
             ];
             $send = User::sendNotificationForCron($responseData);

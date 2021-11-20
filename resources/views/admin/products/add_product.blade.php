@@ -1023,51 +1023,20 @@
     <script type="text/javascript">
         $('#datatable').DataTable({responsive: true});
     </script>
-    <script src="{{ asset('plugins/custom/ckeditor/ckeditor-classic.bundle.js?v=7.1.7') }}"></script>
+
+    <script src="https://cdn.ckeditor.com/4.16.1/standard-all/ckeditor.js"></script>
+    <script>
+        CKEDITOR.disableAutoInline = true;
+
+        CKEDITOR.replace('description');
+        CKEDITOR.replace('short_description');
+        CKEDITOR.replace('specification');   
+    </script>
+    
+    {{-- <script src="{{ asset('plugins/custom/ckeditor/ckeditor-classic.bundle.js?v=7.1.7') }}"></script> --}}
     <!--end::Page Vendors-->
     <!--begin::Page Scripts(used by this page)-->
     <script type="text/javascript">
-        var KTCkeditor = function () {
-            // Private functions
-            var demos = function () {
-                ClassicEditor
-                    .create(document.querySelector('#description'))
-                    .then(editor => {
-                        console.log(editor);
-                    })
-                    .catch(error => {
-                        console.error(error);
-                    });
-            }
-            var demos1 = function () {
-                ClassicEditor
-                    .create(document.querySelector('#short_description'))
-                    .then(editor => {
-                        console.log(editor);
-                    })
-                    .catch(error => {
-                        console.error(error);
-                    });
-            }
-            var demos2 = function () {
-                ClassicEditor
-                    .create(document.querySelector('#specification'))
-                    .then(editor => {
-                        console.log(editor);
-                    })
-                    .catch(error => {
-                        console.error(error);
-                    });
-            }
-            return {
-                // public functions
-                init: function () {
-                    demos();
-                    demos1();
-                    demos2();
-                }
-            };
-        }();
 
         // Initialization
         jQuery(document).ready(function () {
