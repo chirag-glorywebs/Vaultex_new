@@ -17,6 +17,30 @@ use Illuminate\Support\Str;
 class VendorEmailController extends BaseController
 {
     /**
+     * Verify vendor code api
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function verifyVendorCode(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'code' => 'required|string|min:3',
+        ]);
+
+        $user = User::query()
+            ->whereUserRole(3)
+            ->whereVendorCode($request->code)
+            ->select('id', 'vendor_code', 'mobile')
+            ->first();
+
+        if ($user) {
+            return $this->sendResponse($user, 'The vendor has been found');
+        } else {
+            return $this->sendError(false, 'Vendor code does not exist. Please try again');
+        }
+    }
+
+    /**
      * Send OTP to Vendor Mobile Number api
      *
      * @return \Illuminate\Http\Response
@@ -31,12 +55,13 @@ class VendorEmailController extends BaseController
         $otp = rand(100000, 999999);
 
         $user = User::query()
-            ->whereMobile($request->mobile)
+            ->whereUserRole(3)
+            ->whereVendorCode($request->code)
             ->first();
 
         if ($user) {
-            if ($user->vendor_code != $request->code) {
-                return $this->sendError(true, 'Mobile number already registered');
+            if ($user->mobile != $request->mobile) {
+                return $this->sendError(true, 'Vendor registered with different mobile number');
             }
         } else {
             $user = new User();
@@ -47,7 +72,7 @@ class VendorEmailController extends BaseController
         $user->save();
 
         $response = Http::get('https://smpplive.com/api/send_sms/single_sms', [
-            'to' => "91" . $request->mobile,
+            'to' => $request->mobile,
             'username' => 'inventmedia',
             'password' => 'In@R5304',
             'from' => 'SKYOTP',
@@ -131,7 +156,7 @@ class VendorEmailController extends BaseController
             'code' => 'required|string|min:3',
             'mobile' => 'required|string|min:3',
             'otp' => 'required|string|min:3',
-            'email' => 'required|string|min:3',
+            'email' => 'required|email|min:3',
         ]);
 
         $user = User::query()
@@ -142,6 +167,14 @@ class VendorEmailController extends BaseController
 
         if (!$user) {
             return $this->sendError(false, 'Record not found in database');
+        }
+
+        $checkEmail = User::query()
+            ->where('email', $request->email)
+            ->first();
+
+        if ($checkEmail && $checkEmail->id != $user->id) {
+            return $this->sendError(false, 'This email already registered with other vendor');
         }
         $user->email = $request->email;
         $user->save();
@@ -160,7 +193,7 @@ class VendorEmailController extends BaseController
             $message->to($request->email);
         });
 
-        return $this->sendResponse(true, "Mail send successfully");
+        return $this->sendResponse(true, "Mail sent successfully");
     }
 
     /**

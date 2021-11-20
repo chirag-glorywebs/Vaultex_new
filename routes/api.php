@@ -51,6 +51,7 @@ Route::post('/login', [UserController::class, 'login'])->name('api.login');
 Route::post('/googleLogin', [GoogleController::class, 'googleLogin'])->name('api.googleLogin');
 Route::post('/facebookLogin', [FacebookController::class, 'facebookLogin'])->name('api.facebookLogin');
 
+Route::post('/verify-vendor-code', [VendorEmailController::class, 'verifyVendorCode'])->name('api.verifyVendorCode');
 Route::post('/send-otp', [VendorEmailController::class, 'sendOtp'])->name('api.sendOtp');
 Route::post('/verify-otp', [VendorEmailController::class, 'verifyOtp'])->name('api.verifyOtp');
 Route::post('/resend-otp', [VendorEmailController::class, 'resendOtp'])->name('api.resendOtp');
