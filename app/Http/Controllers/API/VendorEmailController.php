@@ -30,7 +30,7 @@ class VendorEmailController extends BaseController
         $user = User::query()
             ->whereUserRole(3)
             ->whereVendorCode($request->code)
-            ->select('id', 'vendor_code', 'mobile')
+            ->select('id', 'vendor_code', 'phone', 'email')
             ->first();
 
         if ($user) {
@@ -60,12 +60,12 @@ class VendorEmailController extends BaseController
             ->first();
 
         if ($user) {
-            if ($user->mobile != $request->mobile) {
+            if ($user->phone != $request->mobile) {
                 return $this->sendError(true, 'Vendor registered with different mobile number');
             }
         } else {
             $user = new User();
-            $user->mobile = $request->mobile;
+            $user->phone = $request->mobile;
             $user->vendor_code = $request->code;
         }
         $user->otp = $otp;
@@ -99,9 +99,9 @@ class VendorEmailController extends BaseController
         ]);
 
         $user = User::query()
-            ->where('mobile', $request->mobile)
-            ->where('vendor_code', $request->code)
-            ->where('otp', $request->otp)
+            ->wherePhone($request->mobile)
+            ->whereVendorCode($request->code)
+            ->whereOtp($request->otp)
             ->first();
 
         if ($user) {
@@ -125,14 +125,14 @@ class VendorEmailController extends BaseController
         $otp = rand(100000, 999999);
 
         $user = User::query()
-            ->whereMobile($request->mobile)
+            ->wherePhone($request->mobile)
             ->whereVendorCode($request->code)
             ->first();
         $user->otp = $otp;
         $user->save();
 
         $response = Http::get('https://smpplive.com/api/send_sms/single_sms', [
-            'to' => "91" . $request->mobile,
+            'to' => $request->mobile,
             'username' => 'inventmedia',
             'password' => 'In@R5304',
             'from' => 'SKYOTP',
@@ -160,9 +160,9 @@ class VendorEmailController extends BaseController
         ]);
 
         $user = User::query()
-            ->where('mobile', $request->mobile)
-            ->where('vendor_code', $request->code)
-            ->where('otp', $request->otp)
+            ->wherePhone($request->mobile)
+            ->whereVendorCode($request->code)
+            ->whereOtp($request->otp)
             ->first();
 
         if (!$user) {
