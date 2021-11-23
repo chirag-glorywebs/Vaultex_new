@@ -63,7 +63,24 @@ class WishlistController extends BaseController
                     ->join('price_lists', 'products.sku', '=', 'price_lists.item_no') 
                     ->join('users', 'price_lists.price_list_no', '=', 'users.price_list_no')
                     ->join('liked_products', 'products.id', '=', 'liked_products.liked_products_id')
-                    ->select('products.id','products.product_name','products.product_type','products.regular_price','products.sale_price','products.category_id','products.main_image','products.medium_image','products.sku','products.slug','products.short_description','products.specification','products.trending_product','products.best_selling','price_lists.list_price AS uprice', DB::raw('COALESCE(price_lists.list_price, products.regular_price) as price'), DB::raw('COALESCE(CAST(((products.regular_price - price_lists.list_price) * 100 / products.regular_price) as decimal(5,2)),0) discount'))
+                    ->select(
+                        'products.id',
+                        'products.product_name',
+                        'products.product_type',
+                        'products.regular_price',
+                        'products.sale_price',
+                        // 'products.category_id',
+                        'products.main_image',
+                        'products.medium_image',
+                        'products.sku',
+                        'products.slug',
+                        'products.short_description',
+                        'products.specification',
+                        'products.trending_product',
+                        'products.best_selling',
+                        'price_lists.list_price AS uprice', 
+                        DB::raw('COALESCE(price_lists.list_price, products.regular_price) as price'), 
+                        DB::raw('COALESCE(CAST(((products.regular_price - price_lists.list_price) * 100 / products.regular_price) as decimal(5,2)),0) discount'))
                      
                      ->where('users.id', '=', $user_id)
                      ->where('liked_customers_id', $userID)
@@ -86,6 +103,12 @@ class WishlistController extends BaseController
                 $item->medium_image = asset($item->medium_image);
             }else{
                 $item->medium_image = asset('uploads/placeholder-medium.jpg');
+            }
+
+            if(!empty($item->thumbnail_image) && file_exists($item->thumbnail_image)){
+                $item->thumbnail_image = asset($item->thumbnail_image);
+            }else{
+                $item->thumbnail_image = asset('uploads/placeholder-medium.jpg');
             }
 
 

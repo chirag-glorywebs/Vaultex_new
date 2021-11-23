@@ -998,7 +998,17 @@ class ProductsController extends BaseController
         } else {
             $orderby = (isset($request->orderby)) ?   $request->orderby : "id";
             $order =  (isset($request->order)) ?   $request->order : "ASC";
-            $data = Products::select('id', 'product_name', 'regular_price', 'sale_price', 'category_id', 'main_image', 'sku', 'slug', 'short_description', 'specification')
+            $data = Products::select(
+                'id', 
+                'product_name', 
+                'regular_price', 
+                'sale_price', 
+                'category_id', 
+                'main_image', 
+                'sku', 
+                'slug', 
+                'short_description', 
+                'specification')
                 ->Where('product_name', 'like', DB::raw("'%$serch_data%'"))
                 ->where('status', 1)
                 ->orderby($orderby, $order)
@@ -1008,6 +1018,16 @@ class ProductsController extends BaseController
                     $item->main_image = asset($item->main_image);
                 } else {
                     $item->main_image = asset('uploads/product-placeholder.png');
+                }
+                if (!empty($item->medium_image) && file_exists($item->medium_image)) {
+                    $item->medium_image = asset($item->medium_image);
+                } else {
+                    $item->medium_image = asset('uploads/placeholder-large.jpg');
+                }
+                if (!empty($item->thumbnail_image) && file_exists($item->thumbnail_image)) {
+                    $item->thumbnail_image = asset($item->thumbnail_image);
+                } else {
+                    $item->thumbnail_image = asset('uploads/placeholder-large.jpg');
                 }
             }
             if (!$data->isEmpty()) {
@@ -1144,7 +1164,7 @@ class ProductsController extends BaseController
             'products.product_name',
             'products.description',
             'products.short_description',
-            'categories.category_name as category_id',
+            // 'categories.category_name as category_id',
             'brands.brand_name as brand_id',
             DB::raw("'' as main_image"),
             'products.regular_price',
@@ -1257,6 +1277,7 @@ class ProductsController extends BaseController
             'product_details.QryGroup63',
             'product_details.QryGroup64'
             )
+            ->WITH('productCategories')
             ->leftJoin('product_details', 'product_details.product_id', '=', 'products.id')
             // ->leftJoin('categories', 'categories.id', '=', 'products.category_id')
             ->leftJoin('brands', 'brands.id', '=', 'products.brand_id')
