@@ -259,7 +259,8 @@ if (!$coupon == NULL &&  !$coupon == '') {
                             'item_name' => $attribute->item_name,
                             'item_code' => $attribute->item_code,
                             'variant_data' => $attribute->product_variant_data,
-                            'quantity' => $attribute->quantity
+                            'quantity' => $attribute->quantity,
+                            'product_price' => $product->price
                         ]);
 
                      

@@ -13,9 +13,9 @@
             <table class="table table-bordered table-hover " id="datatable">                
                 <thead>
                 <tr>
-                    {{-- <th>
+                    <th>
                         <input type="checkbox" name="select_all" value="1" id="product-select-all">
-                    </th> --}}
+                    </th>
                     <th></th>
                     <th></th>
                     <th></th>
@@ -77,30 +77,30 @@ div.dataTables_wrapper div.dataTables_processing {
         //Data table initialization
         $(document).ready(function () {
             var table = $('#datatable').DataTable({                                               
-                // select: {
-                //     style: 'multi',
-                //     selector: 'td:first-child'
-                // },
-                // dom: 'l<"toolbar-delete">frtip',
-                // initComplete: function(){
-                //     $("div.toolbar-delete")
-                //         .html('<button class="btn btn-sm btn-danger">Delete Selected Products</button>');
-                // },
+                select: {
+                    style: 'multi',
+                    selector: 'td:first-child'
+                },
+                dom: 'l<"toolbar-delete">frtip',
+                initComplete: function(){
+                    $("div.toolbar-delete")
+                        .html('<button class="btn btn-sm btn-secondary">Delete Selected Products</button>');
+                },
                 processing: true,
                 serverSide: true,
                 responsive: true,
                 order: [[1, 'asc']],
                 ajax: "{{ route('products.index') }}",
                 columns: [ 
-                    // {
-                    //     data: "id", 
-                    //     name: "selectedIds",
-                    //     orderable: false,
-                    //     searchable: false,
-                    //     render: function (data, type, full, meta){
-                    //         return '<input type="checkbox" name="id[]" value="' + $('<div/>').text(data).html() + '">';
-                    //     }               
-                    // },                      
+                    {
+                        data: "id", 
+                        name: "selectedIds",
+                        orderable: false,
+                        searchable: false,
+                        render: function (data, type, full, meta){
+                            return '<input type="checkbox" name="id[]" value="' + $('<div/>').text(data).html() + '">';
+                        }               
+                    },                      
                     {
                         sTitle: "No",
                         data: "id", 

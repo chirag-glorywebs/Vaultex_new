@@ -99,9 +99,12 @@ class OrderController extends BaseController
                 $cart_data = DB::table('orders')
                 ->join('order_products','orders.id','=','order_products.order_id')
                 ->join('products','order_products.product_id','=','products.id')
+                ->join('price_lists', 'products.sku', '=', 'price_lists.item_no')  
                 ->select('orders.date_purchased','products.sale_price','products.regular_price',
                 'order_products.sub_total','order_products.product_id','order_products.product_name',
-                'order_products.product_quantity','order_products.product_price','products.main_image')
+                'order_products.product_quantity','order_products.product_price','products.main_image',
+                DB::raw('COALESCE(price_lists.list_price, products.regular_price) as uprice'),
+                )
                 ->where('orders.id',$payment_status['order_id'])
                 ->where('orders.userid',$user_id)
                 ->get();
@@ -297,6 +300,7 @@ class OrderController extends BaseController
             ])->first();
         $totalPrice = 0;
         $products = Order_products::join('products', 'order_products.product_id', '=', 'products.id')
+            // ->join('price_lists', 'products.sku', '=', 'price_lists.item_no')  
             ->join('orders', 'orders.id', '=', 'order_products.order_id')
             ->select(
                 'products.id',
@@ -314,6 +318,7 @@ class OrderController extends BaseController
                 'order_products.product_quantity AS quantity',
                 'order_products.sub_total AS subtotal',
                 'order_products.final_price AS price'
+                // DB::raw('COALESCE(price_lists.list_price, products.regular_price) as uprice'),
             )
             ->where('products.status', 1)
             ->where('orders.id', $id)
@@ -355,6 +360,18 @@ class OrderController extends BaseController
             } else {
                 $product->main_image = asset('uploads/placeholder-medium.jpg');
             }
+
+            if (!empty($product->medium_image) && file_exists($product->medium_image)) {
+                $product->medium_image = asset($product->medium_image);
+            } else {
+                $product->medium_image = asset('uploads/placeholder-medium.jpg');
+            } 
+
+            if (!empty($product->thumbnail_image) && file_exists($product->thumbnail_image)) {
+                $product->thumbnail_image = asset($product->thumbnail_image);
+            } else {
+                $product->thumbnail_image = asset('uploads/placeholder-medium.jpg');
+            } 
            
             $attributes = DB::table('order_product_attributes')->join('order_products', 'order_product_attributes.order_product_id', '=', 'order_products.id')
                 ->where('order_product_attributes.order_id', $id)
@@ -363,8 +380,8 @@ class OrderController extends BaseController
                 'order_product_attributes.item_code',
                 'order_product_attributes.item_name',
                 'order_product_attributes.variant_data',
-                'order_product_attributes.quantity')
-
+                'order_product_attributes.quantity',
+                'order_product_attributes.product_price')
                 ->get();  
             $product->products_attributes = $attributes;
         }
