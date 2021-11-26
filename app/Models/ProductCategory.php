@@ -18,11 +18,11 @@ class ProductCategory extends Model
 
 
     public static function assignProductCategories($productId, $categoryIdsArr){
-        $deletedRows = ProductCategory::where('product_id', $productId)->delete();        
+        $deletedRows = ProductCategory::where('product_id', $productId)->delete(); 
         $requestData = [];
         foreach ($categoryIdsArr as $key => $value) {
-            $requestData[$key]['category_id'] = $value;
             $requestData[$key]['product_id'] = $productId;
+            $requestData[$key]['category_id'] = $value;
             $requestData[$key]['status'] = 1;
             $requestData[$key]['created_by'] = Auth::user()->id;
             $requestData[$key]['updated_by'] = Auth::user()->id;

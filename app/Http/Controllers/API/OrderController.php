@@ -60,7 +60,7 @@ class OrderController extends BaseController
             $paymentsMenthods[$icount]['payment_method'] =  $this->readableStringModify($data['payment_method']);
             $icount++;
         }
-        $response['shipping_cost'] = 100.00;
+        // $response['shipping_cost'] = 100.00;
         $response['vat'] = 5;
         $response['payment_methods'] = $paymentsMenthods;
         if (!empty($user_data)) {
@@ -300,7 +300,6 @@ class OrderController extends BaseController
             ])->first();
         $totalPrice = 0;
         $products = Order_products::join('products', 'order_products.product_id', '=', 'products.id')
-            // ->join('price_lists', 'products.sku', '=', 'price_lists.item_no')  
             ->join('orders', 'orders.id', '=', 'order_products.order_id')
             ->select(
                 'products.id',
@@ -317,12 +316,12 @@ class OrderController extends BaseController
                 'products.specification',
                 'order_products.product_quantity AS quantity',
                 'order_products.sub_total AS subtotal',
-                'order_products.final_price AS price'
-                // DB::raw('COALESCE(price_lists.list_price, products.regular_price) as uprice'),
+                'order_products.final_price AS price',
             )
             ->where('products.status', 1)
             ->where('orders.id', $id)
-            ->where('orders.userid', $user_id)->get();
+            ->where('orders.userid', $user_id)            
+            ->get();
 
         if ($data->status != 'Completed') {
             $track_order = DB::table('manage_order_status')
@@ -384,8 +383,11 @@ class OrderController extends BaseController
                 'order_product_attributes.product_price')
                 ->get();  
             $product->products_attributes = $attributes;
+
+            $productPriceWithCategories = Products::getProductPrice($user_id, $product->id);            
+            $product->uprice = $productPriceWithCategories->uprice;
+            $product->productCategories = $productPriceWithCategories->productCategories;
         }
-        //return $products;
         $data->products   = $products;
 
         $data->payment_method = 'Cash On Delivery';

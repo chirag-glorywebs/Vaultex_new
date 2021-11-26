@@ -37,7 +37,7 @@ class ProductsController extends Controller
              $products = Products::leftJoin('brands', 'brands.id', '=', 'products.brand_id')
             //  ->leftJoin('categories', 'categories.id', '=', 'products.category_id')
             ->select('products.*', 'brands.brand_name')
-            ->WITH('productCategories');            
+            ->WITH('productCategories');
             // ->get();
 
          /*    $products = Products::join('brands', 'brands.id', '=', 'products.brand_id')
@@ -410,6 +410,7 @@ class ProductsController extends Controller
         
         $products->video = $videoImage;
         $products->download_datasheet = $downloadDatasheet;
+        
         if($products->save()){
             $productId = $req->id;
             $categoryId = $req->category_id;
@@ -417,7 +418,7 @@ class ProductsController extends Controller
         }
 
         Session::flash('message', 'Successfully updated!');
-        return redirect('/admin/products/edit/' . $req->id . '');
+        return redirect('/admin/products/');
     }
 
 /* update product gallery*/

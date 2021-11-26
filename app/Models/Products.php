@@ -68,6 +68,22 @@ class Products extends Model
     /* **********************************************************
     ** End - Remove product related data
     ********************************************************** */
+    public static function getProductPrice($userId, $productId) {
+        $productsData =  Products::WITH('productCategories')
+                    ->join('price_lists', 'products.sku', '=', 'price_lists.item_no') 
+                    ->join('users', 'price_lists.price_list_no', '=', 'users.price_list_no')
+                    ->select(
+                        'products.id',
+                        'price_lists.list_price AS uprice', 
+                        'products.regular_price', 
+                        'products.sale_price',
+                        'sku')
+                    ->where('users.id', $userId)
+                    ->where('products.id', $productId)
+                    ->first();
+        return $productsData;
+    }
+
 
     public function filterProducts()
     {

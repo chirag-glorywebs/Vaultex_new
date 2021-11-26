@@ -68,10 +68,10 @@ class Order extends Model
     $shipping_address =  DB::table('user_addresses')->where('id',$request->shipping_address)->first(); 
     $total_amount = $cart_data['grandTotal']; 
     $vat = 5;
-    $on_freeshipping = 200.00;
-    $shipping_cost = 100.00;
-    //Apply Promo code place order 
+    // $on_freeshipping = 200.00;
+    // $shipping_cost = 100.00;
 
+    //Apply Promo code place order 
     $user_id =  $request->user()->id;
     $current_date = date('Y-m-d H:i:s');
     if(isset($request->coupon_code)){
@@ -168,14 +168,12 @@ if (!$coupon == NULL &&  !$coupon == '') {
         }
     }
 
-
-    //return $order_price;
-    if($order_price > $on_freeshipping){
-        $shipping_cost = 0;
-    } 
+    // if($order_price > $on_freeshipping){
+    //     $shipping_cost = 0;
+    // }     
+    // $order_price =  $order_price + $total_tax + $shipping_cost;
     
-    $order_price =  $order_price + $total_tax + $shipping_cost;
-  
+    $order_price =  $order_price + $total_tax;
     $order_price = number_format((float) $order_price, 2, '.', '');
     $payment_status = 'success';
 
@@ -207,7 +205,7 @@ if (!$coupon == NULL &&  !$coupon == '') {
             'last_modified' => $last_modified,
             'date_purchased' => $date_purchased,
             'order_price' => $order_price,
-            'shipping_cost' => $shipping_cost,
+            // 'shipping_cost' => $shipping_cost,
             'orders_status' => $orders_status,
             
             //'orders_date_finished'  => $orders_date_finished,

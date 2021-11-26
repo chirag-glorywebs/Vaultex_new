@@ -21,7 +21,8 @@ class Cart extends Model
         $totalPrice = 0;
         $orderby = "id";
         $order =  "ASC";
-        $result = Products::join('customers_basket', 'products.id', '=', 'customers_basket.product_id')
+        $result = Products::WITH('productCategories')
+            ->join('customers_basket', 'products.id', '=', 'customers_basket.product_id')
             ->where('user_id', $user_id)
             ->select([
                 'customers_basket.id', 'customers_basket.quantity', 'customers_basket.price', 'products.id', 'customers_basket.user_id', 'products.product_name', 'products.regular_price', 'products.sale_price',
@@ -79,10 +80,11 @@ class Cart extends Model
         }
         $settings = Settings::select('value')->where('id',15)->orWhere('id',18)->get();
         $vat  = $settings[0]['value'];
-        $shipping_cost  = $settings[1]['value'];
+        // $shipping_cost  = $settings[1]['value'];
         $vatAmount = ($totalPrice / 100) * 5;
         $vat_amount = number_format((float)$vatAmount,2,'.','');
-        $amount_payable = $vat_amount + $shipping_cost + $totalPrice;
+        // $amount_payable = $vat_amount + $shipping_cost + $totalPrice;
+        $amount_payable = $vat_amount + $totalPrice;
        
      # coupon code discount
     //    $data =  Coupon::select('used_by','amount','id','code','minimum_amount')->where('code',$request->coupon_code)->first();
@@ -98,8 +100,13 @@ class Cart extends Model
       
     //     }
     // }    
-        $responseData = array('items'=>$result,'grandTotal'=>$totalPrice,'vat'=>$vat,'shipping_cost'=>$shipping_cost,
-        'vat_amount'=>$vat_amount,'amount_payable'=>$amount_payable);
+        $responseData = array(
+            'items'=>$result,
+            'grandTotal'=>$totalPrice,
+            'vat'=>$vat,
+            // 'shipping_cost'=>$shipping_cost,
+            'vat_amount'=>$vat_amount,
+            'amount_payable'=>$amount_payable);
         return $responseData;
     }
 }
