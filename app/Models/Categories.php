@@ -52,4 +52,10 @@ class Categories extends Model
           			->with('parent');
     }
 
+    // Recursive catParents
+    public function catParents() {
+        return $this->belongsTo(Categories::class, 'parent_category')->select(['id', 'category_name', 'slug', 'parent_category'])
+          			->with('catParents');
+    }
+
 }
