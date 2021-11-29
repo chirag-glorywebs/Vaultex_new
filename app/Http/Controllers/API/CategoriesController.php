@@ -78,7 +78,7 @@ function productCategoryList($slug)
     {
         # code...
         $item =  Categories::select('id','category_name','parent_category','logo','category_description','slug')
-                    ->with('parents')
+                    ->with('parents', 'catParents')
                     ->with('childCategoires')
                     ->where('status',1)
                     ->where('slug',$slug)
