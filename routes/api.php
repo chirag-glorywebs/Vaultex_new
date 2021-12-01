@@ -23,8 +23,7 @@ use App\Http\Controllers\API\UserController;
 use App\Http\Controllers\API\WishlistController;
 use App\Http\Controllers\API\VendorEmailController;
 use App\Http\Controllers\API\UserProductVideoController;
-
-
+use App\Http\Controllers\CheckoutController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -38,13 +37,13 @@ use Illuminate\Support\Facades\Route;
 |
  */
 
- // Truncate Tables
- Route::get('/truncate-product-tables', [ProductsController::class, 'truncateProductTables']);
- Route::get('/export-products', [ProductsController::class, 'exportProductData']);
- 
+// Truncate Tables
+Route::get('/truncate-product-tables', [ProductsController::class, 'truncateProductTables']);
+Route::get('/export-products', [ProductsController::class, 'exportProductData']);
+
 /* Mobile APP */
 Route::get('/home', [HomeController::class, 'home'])->name('api.blogs');
-Route::get('homeweb',[HomeController::class,'homePage'])->name('api.homeweb');
+Route::get('homeweb', [HomeController::class, 'homePage'])->name('api.homeweb');
 // without resource
 Route::post('/register', [UserController::class, 'register'])->name('api.register');
 Route::post('/login', [UserController::class, 'login'])->name('api.login');
@@ -101,10 +100,10 @@ Route::get('/watermark-user-product-video', [UserProductVideoController::class, 
 /* End Water Mark Video for products*/
 
 # search product api
-Route::get('/product/search',[ProductsController::class,'searchProducts'])->name('api.product.serach');
+Route::get('/product/search', [ProductsController::class, 'searchProducts'])->name('api.product.serach');
 #filter Products
-Route::get('filterList',[ProductsController::class,'filterList'])->name('api.filterlist');
-Route::get('filterProducts',[ProductsController::class,'filterProducts'])->name('api.filter.products');
+Route::get('filterList', [ProductsController::class, 'filterList'])->name('api.filterlist');
+Route::get('filterProducts', [ProductsController::class, 'filterProducts'])->name('api.filter.products');
 
 /* Route::get('/productListBycat', [ProductsController::class, 'productListBycat'])->name('api.productListBycat');
 Route::get('/productListByBrand', [ProductsController::class, 'productListByBrand'])->name('api.productListByBrand');
@@ -135,7 +134,7 @@ Route::get('/product/{product_slug}', [ProductsController::class, 'productDetail
 Route::get('page/{slug}',[PageController::class,'pageDetails']); */
 Route::get('productweb/{product_slug}', [ProductsController::class, 'productDetails'])->name('api.productDetails');
 Route::get('/blogweb/{blog_slug}', [BlogController::class, 'getBlogDetails'])->name('api.getBlogDetails');
-Route::get('productCategory/{category_slug}',[CategoriesController::class,'productCategoryList']);
+Route::get('productCategory/{category_slug}', [CategoriesController::class, 'productCategoryList']);
 /* Import data from Thid party APIs */
 Route::get('/importVendor', [ImportDataController::class, 'vendorImport'])->name('api.vendorImport');
 Route::get('/importProduct', [ImportDataController::class, 'productImport'])->name('api.productImport');
@@ -162,11 +161,11 @@ Route::group(['middleware' => 'auth:api'], function () {
 	Route::post('/rfq/createbyproductsku', [BulkOrderController::class, 'createByProductPage'])->name('api.rfq.createByProductPage');
 	Route::post('/rfq/{id}', [BulkOrderController::class, 'showBulkDetails'])->name('api.rfq.details');
 
-	
-	
+
+
 	Route::post('logout', [UserController::class, 'logout']);
 	Route::post('/changepassword', [PasswordResetController::class, 'changePassword'])->name('api.changePassword');
-	
+
 	/* WishList Routes */
 	Route::post('/addToWishlist', [WishlistController::class, 'store'])->name('api.wishlist.store');
 	Route::get('/wishlist', [WishlistController::class, 'index'])->name('api.wishlist.index');
@@ -177,7 +176,7 @@ Route::group(['middleware' => 'auth:api'], function () {
 	Route::post('updateProfile', [UserController::class, 'updateProfile'])->name('api.updateProfile');
 	Route::get('/userProfile', [UserController::class, 'showProfile'])->name('api.showProfile');
 	Route::post('/setDefaultAddress', [UserController::class, 'setDefaultAddress'])->name('api.setDefaultAddress');
-	
+
 	Route::get('/checkout', [OrderController::class, 'getInfo'])->name('api.checkout.getInfo');
 	Route::post('/placeOrder', [OrderController::class, 'placeOrder'])->name('api.checkout.placeOrder');
 
@@ -187,10 +186,13 @@ Route::group(['middleware' => 'auth:api'], function () {
 	Route::post('/addresses/delete', [UserController::class, 'deleteAddress'])->name('api.addresses.delete');
 	Route::get('/addresses', [UserController::class, 'showAddress'])->name('api.addresses.show');
 
-// Route::get('/user',[UserController::class,'user'])->name('api.user');
-  /* MY ORDER */
-  Route::get('/orders',[OrderController::class,'orderList'])->name('api.orderList');
-  Route::get('/productsByOrders',[OrderController::class,'orderItemList'])->name('api.orderItemList');
-  Route::get('/orders/{id}',[OrderController::class,'viewOrder'])->name('api.viewOrder');
-
+	// Route::get('/user',[UserController::class,'user'])->name('api.user');
+	/* MY ORDER */
+	Route::get('/orders', [OrderController::class, 'orderList'])->name('api.orderList');
+	Route::get('/productsByOrders', [OrderController::class, 'orderItemList'])->name('api.orderItemList');
+	Route::get('/orders/{id}', [OrderController::class, 'viewOrder'])->name('api.viewOrder');
 });
+
+Route::get('text-checkout', [CheckoutController::class, 'index']);
+Route::get('text-checkout/success', [CheckoutController::class, 'success']);
+Route::get('text-checkout/order/ref', [CheckoutController::class, 'ref']);
