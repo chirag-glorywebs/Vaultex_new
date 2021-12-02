@@ -73,18 +73,18 @@ class Helper
             $postData->action = "PURCHASE";
             $postData->amount = new StdClass();
             $postData->amount->currencyCode = "AED";
-            $postData->amount->value = 400;
-            $postData->emailAddress = 'hardikkhorasiya09@gmail.com';
+            $postData->amount->value = (float) $data['amount'] * 100;                   // 400;
+            $postData->emailAddress = $data['email'];                                   // 'hardikkhorasiya09@gmail.com';
             $postData->merchantAttributes = new StdClass();
             // $postData->merchantAttributes->redirectUrl = url('/');
-            $postData->merchantAttributes->redirectUrl = "https://sbmmarketplace.com/";
+            $postData->merchantAttributes->redirectUrl = "http://sbmmarketplace.com/";
             $postData->merchantAttributes->skipConfirmationPage = false;
-            $postData->merchantAttributes->cancelUrl = "https://sbmmarketplace.com/";
+            $postData->merchantAttributes->cancelUrl = "http://sbmmarketplace.com/";
             $postData->merchantAttributes->cancelText = "Continue Shopping";
             $postData->merchantOrderReference = "myorder-0001";
             $postData->billingAddress = new stdClass();
-            $postData->billingAddress->firstName = "Test";
-            $postData->billingAddress->lastName = "Customer";
+            $postData->billingAddress->firstName = $data['first_name'];                 // "Test";
+            $postData->billingAddress->lastName = $data["last_name"];                   // "Customer";
 
             $outlet = "61016811-5bae-40e6-acf2-3d85079cbd23";
 

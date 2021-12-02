@@ -8,22 +8,23 @@ use Illuminate\Support\Facades\Http;
 
 class CheckoutController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         $getNGeniusAccessToken = Helper::getNGeniusAccessToken();
         if ($getNGeniusAccessToken['success']) {
             $access_token = $getNGeniusAccessToken['output']->access_token;
-            $createOrder = Helper::createOrder($access_token);
+            $createOrder = Helper::createOrder($access_token, $request->all());
             // dd($createOrder);
             if ($createOrder['success']) {
                 if (isset($createOrder['output']->code)) {
-                    return response()->json($createOrder['output']);
+                    return response()->json(['success' => false, 'message' => 'Something went wrong!!', "data" => $createOrder['output']]);
                 } elseif (isset($createOrder['output']->_links)) {
-                    return redirect($createOrder['output']->_links->payment->href);
+                    // return redirect(['success' => true, "link" => $createOrder['output']->_links->payment->href]);
+                    return response()->json(['success' => true, "link" => $createOrder['output']->_links->payment->href]);
                 }
             }
         }
-        return response()->json(['success' => true, 'message' => 'Something went wrong!!']);
+        return response()->json(['success' => false, 'message' => 'Something went wrong!!']);
     }
 
     public function success(Request $request)

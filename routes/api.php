@@ -193,6 +193,6 @@ Route::group(['middleware' => 'auth:api'], function () {
 	Route::get('/orders/{id}', [OrderController::class, 'viewOrder'])->name('api.viewOrder');
 });
 
-Route::get('text-checkout', [CheckoutController::class, 'index']);
-Route::get('text-checkout/success', [CheckoutController::class, 'success']);
-Route::get('text-checkout/order/ref', [CheckoutController::class, 'ref']);
+Route::post('test-checkout', [CheckoutController::class, 'index']);
+Route::post('test-checkout/success', [CheckoutController::class, 'success']);
+Route::post('test-checkout/order/ref', [CheckoutController::class, 'ref']);
