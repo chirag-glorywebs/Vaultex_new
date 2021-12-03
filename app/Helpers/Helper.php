@@ -23,28 +23,13 @@ class Helper
     public static function getNGeniusAccessToken()
     {
         try {
-            $apikey = "MDBkZGEzYmYtNzkzZi00MTk1LWFmNmQtM2FiNjRkYmQzOWY1OmY0MzEzZmQ3LWQ2ZTItNGI3NC04ZWY1LTU3ODNlOWMwNDRlMw==";     // enter your API key here
-            $api = "https://api-gateway.sandbox.ngenius-payments.com/identity/auth/access-token";
-
-            // $http = Http::withOptions([
-            //     'CURLOPT_SSL_VERIFYPEER' => false,
-            // ])->withHeaders([
-            //     "accept" => "application/vnd.ni-identity.v1+json",
-            //     "authorization" => "Basic " . $apikey,
-            //     "content-type" => "application/vnd.ni-identity.v1+json"
-            // ])->post($api);
-
-            // dd($http->json());
-            // if ($http->successful()) {
-            // } else {
-            //     dd($http->failed());
-            // }
+            $api = config('ngenius.api') . "identity/auth/access-token";
 
             $ch = curl_init();
             curl_setopt($ch, CURLOPT_URL, $api);
             curl_setopt($ch, CURLOPT_HTTPHEADER, array(
                 "accept: application/vnd.ni-identity.v1+json",
-                "authorization: Basic " . $apikey,
+                "authorization: Basic " . config('ngenius.key'),
                 "content-type: application/vnd.ni-identity.v1+json"
             ));
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
@@ -86,13 +71,13 @@ class Helper
             $postData->billingAddress->firstName = $data['first_name'];                 // "Test";
             $postData->billingAddress->lastName = $data["last_name"];                   // "Customer";
 
-            $outlet = "61016811-5bae-40e6-acf2-3d85079cbd23";
+            $outlet = config('ngenius.outlet');
 
             $json = json_encode($postData);
             // return $postData;
             $ch = curl_init();
 
-            curl_setopt($ch, CURLOPT_URL, "https://api-gateway.sandbox.ngenius-payments.com/transactions/outlets/" . $outlet . "/orders");
+            curl_setopt($ch, CURLOPT_URL, config('ngenius.api') . "transactions/outlets/" . $outlet . "/orders");
             curl_setopt($ch, CURLOPT_HTTPHEADER, array(
                 "Authorization: Bearer " . $token,
                 "Content-Type: application/vnd.ni-payment.v2+json",
@@ -127,7 +112,7 @@ class Helper
             // return $postData;
             $ch = curl_init();
 
-            curl_setopt($ch, CURLOPT_URL, "https://api-gateway.sandbox.ngenius-payments.com/transactions/outlets/" . $outlet . "/orders/" . $ref);
+            curl_setopt($ch, CURLOPT_URL, config('ngenius.api') . "transactions/outlets/" . $outlet . "/orders/" . $ref);
             curl_setopt($ch, CURLOPT_HTTPHEADER, array(
                 "Authorization: Bearer " . $token,
                 "Content-Type: application/vnd.ni-payment.v2+json",
