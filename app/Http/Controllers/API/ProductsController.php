@@ -81,8 +81,8 @@ class ProductsController extends BaseController
                         DB::raw('COALESCE(price_lists.list_price, products.regular_price) as price'), 
                         DB::raw('COALESCE(CAST(((products.regular_price - price_lists.list_price) * 100 / products.regular_price) as decimal(5,2)),0) discount')
                         )
-                     ->where('users.id', '=', $user_id)
-                     ->where('products.status', 1);
+                    ->where('users.id', '=', $user_id)
+                    ->where('products.status', 1);
                      
                  
              }else{
@@ -226,10 +226,11 @@ class ProductsController extends BaseController
                 } 
 
         $parent_cats = array();
+
         if ($cat_id > 0) {
             $categoryIds = Categories::where('parent_category', $cat_id)->pluck('id')->all(); 
             $childCatData = Categories::whereIn('parent_category',$categoryIds)->pluck('id')->all();
-         
+
             // $query->join('categories','categories.id','=','products.category_id');                        
             $query->join('product_categories', function($join) use($cat_id, $categoryIds, $childCatData){
                 // $join->where('categories.id', '=', 'product_categories.category_id');
@@ -785,7 +786,7 @@ class ProductsController extends BaseController
         $limit = (isset($request->limit)) ?  intval($request->limit) : 0;
 
         $query =  DB::table('products') 
-            ->leftJoin('categories', 'categories.id', '=', 'products.category_id')
+            // ->leftJoin('categories', 'categories.id', '=', 'products.category_id')
             ->leftJoin('brands', 'brands.id', '=', 'products.brand_id') 
           //  ->leftJoin('order_products', 'products.id', '=', 'order_products.product_id')
           //  ->leftJoin('order_products', 'products.id', '=', 'order_products.product_id')
@@ -815,8 +816,32 @@ class ProductsController extends BaseController
                 $query->orderBy('total_sales', 'DESC'); */
            if (isset($orderby) && ($orderby == "best-deal") )
             {    
-                $query->select('products.id', 'products.product_name', 'products.regular_price', 'products.sale_price', 'products.category_id','categories.category_name', 'products.main_image', 'products.sku', 'products.slug', 'products.short_description', 'products.specification', DB::raw('COALESCE(CAST(((products.regular_price - products.sale_price) * 100 / products.regular_price) as decimal(5,2)),0) discount') );
-                $query->groupBy('products.id', 'products.product_name', 'products.regular_price', 'products.sale_price', 'products.category_id','categories.category_name', 'products.main_image', 'products.sku', 'products.slug', 'products.short_description', 'products.specification' );
+                $query->select(
+                    'products.id', 
+                    'products.product_name', 
+                    'products.regular_price', 
+                    'products.sale_price', 
+                    // 'products.category_id',
+                    'categories.category_name', 
+                    'products.main_image', 
+                    'products.sku', 
+                    'products.slug', 
+                    'products.short_description', 
+                    'products.specification', 
+                    DB::raw('COALESCE(CAST(((products.regular_price - products.sale_price) * 100 / products.regular_price) as decimal(5,2)),0) discount') );
+                $query->groupBy(
+                    'products.id', 
+                    'products.product_name', 
+                    'products.regular_price', 
+                    'products.sale_price', 
+                    // 'products.category_id',
+                    'categories.category_name', 
+                    'products.main_image', 
+                    'products.sku', 
+                    'products.slug', 
+                    'products.short_description', 
+                    'products.specification' 
+                );
                 $query->orderBy('discount', 'DESC');
             }else{
                 $query->select('products.id', 'products.product_name', 'products.regular_price', 'products.sale_price', 'products.category_id','categories.category_name', 'products.main_image', 'products.sku', 'products.slug', 'products.short_description', 'products.specification', DB::raw('COALESCE(CAST(((products.regular_price - products.sale_price) * 100 / products.regular_price) as decimal(5,2)),0) discount'), DB::raw('COALESCE(sale_price, regular_price) as price'));
@@ -1233,7 +1258,7 @@ class ProductsController extends BaseController
             'product_details.QryGroup64'
             )
             ->leftJoin('product_details', 'product_details.product_id', '=', 'products.id')
-            ->leftJoin('categories', 'categories.id', '=', 'products.category_id')
+            // ->leftJoin('categories', 'categories.id', '=', 'products.category_id')
             ->leftJoin('brands', 'brands.id', '=', 'products.brand_id')
             ->leftJoin('product_attributes', 'product_attributes.product_id', '=', 'products.id')
             ->join('attributes', 'attributes.id', '=', 'product_attributes.attribute_id')
