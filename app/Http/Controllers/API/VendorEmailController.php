@@ -30,7 +30,7 @@ class VendorEmailController extends BaseController
         $user = User::query()
             ->whereUserRole(3)
             ->whereVendorCode($request->code)
-            ->select('id', 'vendor_code', 'phone', 'email')
+            ->select('id', 'vendor_code', 'phone', 'mobile', 'email')
             ->first();
 
         if ($user) {
@@ -60,12 +60,14 @@ class VendorEmailController extends BaseController
             ->first();
 
         if ($user) {
-            if ($user->phone != $request->mobile) {
+            if ($user->mobile != null && $user->mobile != $request->mobile) {
                 return $this->sendError(true, 'Vendor registered with different mobile number');
+            } else {
+                $user->mobile = $request->mobile;
             }
         } else {
             $user = new User();
-            $user->phone = $request->mobile;
+            $user->mobile = $request->mobile;
             $user->vendor_code = $request->code;
         }
         $user->otp = $otp;
@@ -99,7 +101,7 @@ class VendorEmailController extends BaseController
         ]);
 
         $user = User::query()
-            ->wherePhone($request->mobile)
+            ->whereMobile($request->mobile)
             ->whereVendorCode($request->code)
             ->whereOtp($request->otp)
             ->first();
@@ -125,7 +127,7 @@ class VendorEmailController extends BaseController
         $otp = rand(100000, 999999);
 
         $user = User::query()
-            ->wherePhone($request->mobile)
+            ->whereMobile($request->mobile)
             ->whereVendorCode($request->code)
             ->first();
         $user->otp = $otp;
@@ -160,7 +162,7 @@ class VendorEmailController extends BaseController
         ]);
 
         $user = User::query()
-            ->wherePhone($request->mobile)
+            ->whereMobile($request->mobile)
             ->whereVendorCode($request->code)
             ->whereOtp($request->otp)
             ->first();
