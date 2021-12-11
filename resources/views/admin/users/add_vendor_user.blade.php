@@ -43,6 +43,13 @@
                     <input type="text" class="form-control form-control-solid" name="phone" placeholder="Enter phone"
                            value="{{ old('phone') }}"/>
                 </div>
+                
+                <div class="form-group">
+                    <label>Mobile:</label>
+                    <input type="text" class="form-control form-control-solid" name="mobile" placeholder="Enter mobile"
+                           value="{{$data['mobile']}}"/>
+                </div>
+
                 <div class="form-group">
                     <label>Address:</label>
                     <textarea class="form-control form-control-solid" name="address"
