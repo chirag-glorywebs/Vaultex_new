@@ -283,7 +283,8 @@ class HomeController extends BaseController
         /* Best salling product */
         if (Auth::guard('api')->check()) {
             $user_id = $request->user('api')->id;
-            $best_selling = DB::table('products')
+            // $best_selling = Products::table('products')
+            $best_selling = Products::WITH('productCategories')
             ->join('price_lists', 'products.sku', '=', 'price_lists.item_no') 
             ->join('users', 'price_lists.price_list_no', '=', 'users.price_list_no')
             ->leftJoin('liked_products', function($join){
@@ -292,12 +293,12 @@ class HomeController extends BaseController
             }) 
             ->select('products.id',
             // 'products.category_id',
-            'products.product_name','products.product_type','products.thumbnail_image', 'products.medium_image','products.main_image','products.sku','products.slug','price_lists.list_price AS uprice', DB::raw('COALESCE(price_lists.list_price, products.regular_price) as price'),'liked_products.id as wishlist')
+            'products.product_name','products.product_type','products.thumbnail_image', 'products.medium_image','products.main_image','products.sku','products.slug','price_lists.list_price AS uprice', DB::raw('COALESCE(price_lists.list_price, products.regular_price) as price'),'liked_products.id as wishlist')           
             ->where('users.id', '=', $user_id) 
             ->where('products.status', 1)
             ->take(10)->orderBy('products.id', 'ASC')->get();
         }else{  
-            $best_selling =  DB::table('products')->select('id', 'product_name', 'sku', 'regular_price', 'sale_price', 'medium_image','main_image', 'slug')->where('status', 1)->take(10)->orderBy('id', 'DESC')->get();
+            $best_selling =  Products::select('id', 'product_name', 'sku', 'regular_price', 'sale_price', 'medium_image','main_image', 'slug')->where('status', 1)->take(10)->orderBy('id', 'DESC')->get();
         }   
         foreach ($best_selling as $items) {
             if (!empty($items->thumbnail_image) && file_exists($items->thumbnail_image)) {

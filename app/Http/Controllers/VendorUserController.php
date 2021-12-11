@@ -80,6 +80,7 @@ class VendorUserController extends Controller
         $vendorusers->last_name = $req->lastname;
         $vendorusers->email = $req->email;
         $vendorusers->phone = $req->phone;
+        $vendorusers->mobile = $req->mobile;
         $vendorusers->address = $req->address;
         if ($req->hasFile('profilepic')) {
             $profileImage = $req->file('profilepic');
@@ -169,6 +170,7 @@ class VendorUserController extends Controller
         $vendorusers->last_name = $req->lastname;
         $vendorusers->email = $req->email;
         $vendorusers->phone = $req->phone;
+        $vendorusers->mobile = $req->mobile;
         $vendorusers->address = $req->address;
         $businessLogoImage = $req->old_business_logo;
         $profilePicImage = $req->old_profilepic;
