@@ -35,7 +35,7 @@ class ProductsController extends BaseController
     {
         $orderby = (isset($request->orderby)) ?   $request->orderby : "id";
         $order =  (isset($request->order)) ?   $request->order : "ASC";
-        $perPage = (isset($request->per_page)) ?  intval($request->per_page) : 10;
+        $perPage = (isset($request->per_page)) ?  intval($request->per_page) : 90;
         $limit = (isset($request->limit)) ?  intval($request->limit) : 0;
         $cat_id = (isset($request->cat_id)) ?  intval($request->cat_id) : 0;
         $brand_id = (isset($request->brand_id)) ? intval($request->brand_id) : 0;
