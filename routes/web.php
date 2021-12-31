@@ -28,6 +28,23 @@ Route::group(['prefix' => 'admin'], function () {
 });
 */
 
+// Route::get('/send-email/{emailAddress}', function($emailAddress) {     
+//     Mail::send('API.email.emailTest', [
+//         'email' => $emailAddress,
+//         'data' => []
+//     ], function ($message) use ($emailAddress) {
+//         $message->subject('Local Email Testing');
+//         $message->to($emailAddress);
+//     });
+//     // check for failures
+//     if (Mail::failures()) {
+//         print_r(Mail::failures());
+//         echo 'Error : Mail not sent';
+//     } else {
+//         echo 'Success';
+//     }
+// });
+
 Route::group(['middleware' => ['guest','prevent-back-history','check-admin']], function () {
     Route::get('/', 'AdminUserController@index');
     Route::get('/admin', 'AdminUserController@index');
