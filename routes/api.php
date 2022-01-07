@@ -177,6 +177,7 @@ Route::group(['middleware' => 'auth:api'], function () {
 	Route::get('/userProfile', [UserController::class, 'showProfile'])->name('api.showProfile');
 	Route::post('/setDefaultAddress', [UserController::class, 'setDefaultAddress'])->name('api.setDefaultAddress');
 
+	Route::get('GetItemStock', [OrderController::class, 'GetItemStock'])->name('api.checkout.GetItemStock');
 	Route::get('/checkout', [OrderController::class, 'getInfo'])->name('api.checkout.getInfo');
 	Route::post('/placeOrder', [OrderController::class, 'placeOrder'])->name('api.checkout.placeOrder');
 
