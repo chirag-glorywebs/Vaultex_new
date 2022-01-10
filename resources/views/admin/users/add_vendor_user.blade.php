@@ -47,7 +47,7 @@
                 <div class="form-group">
                     <label>Mobile:</label>
                     <input type="text" class="form-control form-control-solid" name="mobile" placeholder="Enter mobile"
-                           value="{{$data['mobile']}}"/>
+                           value="{{ (isset($data) && isset($data['mobile']) && $data['mobile']) ? $data : old('mobile')}}"/>
                 </div>
 
                 <div class="form-group">
