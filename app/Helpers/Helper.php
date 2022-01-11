@@ -2,6 +2,7 @@
 
 namespace App\Helpers;
 
+use App\Models\Settings;
 use stdClass;
 
 class Helper
@@ -54,22 +55,37 @@ class Helper
     public static function createOrder($token, $data = [])
     {
         try {
+            // $currencySetting = Settings::query()
+            //     ->find(17);
+            // if ($currencySetting) {
+            //     $currencyCode = $currencySetting->value;
+            // } else {
+            $currencyCode = "AED";
+            // }
+
+            if (!isset($data['order_id'])) {
+                $data['order_id'] = 28;
+            }
+
             $postData = new stdClass();
             $postData->action = "PURCHASE";
             $postData->amount = new StdClass();
-            $postData->amount->currencyCode = "AED";
+            $postData->amount->currencyCode = $currencyCode;
             $postData->amount->value = (float) $data['amount'] * 100;                   // 400;
             $postData->emailAddress = $data['email'];                                   // 'hardikkhorasiya09@gmail.com';
             $postData->merchantAttributes = new StdClass();
             // $postData->merchantAttributes->redirectUrl = url('/');
-            $postData->merchantAttributes->redirectUrl = "http://sbmmarketplace.com/";
-            $postData->merchantAttributes->skipConfirmationPage = false;
-            $postData->merchantAttributes->cancelUrl = "http://sbmmarketplace.com/";
+            $postData->merchantAttributes->redirectUrl = "http://sbmmarketplace.com/thank-you?order_id=". $data['order_id'];
+            $postData->merchantAttributes->skipConfirmationPage = true;
+            $postData->merchantAttributes->cancelUrl = "http://sbmmarketplace.com/thank-you?order_id=". $data['order_id'];
             $postData->merchantAttributes->cancelText = "Continue Shopping";
-            $postData->merchantOrderReference = "myorder-0001";
+            $postData->merchantOrderReference = $data['order_id'] ?? 'test-order';
             $postData->billingAddress = new stdClass();
-            $postData->billingAddress->firstName = $data['first_name'];                 // "Test";
-            $postData->billingAddress->lastName = $data["last_name"];                   // "Customer";
+            $postData->billingAddress->firstName = $data['first_name'] ?? "Test";                 // "Test";
+            $postData->billingAddress->lastName = $data["last_name"] ?? "Customer";                   // "Customer";
+            $postData->billingAddress->address1 = $data["address1"] ?? "Address1";
+            $postData->billingAddress->city = $data["city"] ?? 'City';
+            $postData->billingAddress->countryCode = $data["countryCode"] ?? "USA";
 
             $outlet = config('ngenius.outlet');
 
@@ -107,7 +123,8 @@ class Helper
     {
         try {
             $outlet = "61016811-5bae-40e6-acf2-3d85079cbd23";
-            $ref = "3d0bf4f9-63d9-4457-a8ce-9ad4abc3ad9e";
+            // $ref = "3d0bf4f9-63d9-4457-a8ce-9ad4abc3ad9e";
+            // $ref = "51bc0e11-97d4-46ad-94f7-e7e1ca25a888";
 
             // return $postData;
             $ch = curl_init();
