@@ -145,6 +145,8 @@ class ProductsController extends Controller
         $products->description = $req->description;
         $products->short_description = $req->short_description;
         $products->specification = $req->specification;
+        $products->features = $req->features;
+        $products->packaging_delivery_descr = $req->packaging_delivery_descr;
         if ($req->hasFile('video')) {
             $video = $req->file('video');
             $videoSave = uplodImage($video);
@@ -297,24 +299,24 @@ class ProductsController extends Controller
     public function update(Request $req)
     {
         $id = $req->id;
-        $req->validate([
-            'product_name' => 'required',
-            'product_type' => 'required',
-            'category_id' => 'required|array',
-            'brand_id' => 'required',
-            'sku' => 'required',
-            'regular_price' => 'required|regex:/^\d+(\.\d{1,2})?$/',
-            'inventory' => 'required',
-            'description' => 'required',
-            'short_description' => 'required',
-            'specification' => 'required',
-            'slug' => [
-            'required',
-                Rule::unique('products')->where(function ($query) use ($id) {
-                    return $query->where('id', '!=', $id);
-                })
-            ],
-        ]);
+        // $req->validate([
+        //     'product_name' => 'required',
+        //     'product_type' => 'required',
+        //     'category_id' => 'required|array',
+        //     'brand_id' => 'required',
+        //     'sku' => 'required',
+        //     'regular_price' => 'required|regex:/^\d+(\.\d{1,2})?$/',
+        //     'inventory' => 'required',
+        //     'description' => 'required',
+        //     'short_description' => 'required',
+        //     'specification' => 'required',
+        //     'slug' => [
+        //     'required',
+        //         Rule::unique('products')->where(function ($query) use ($id) {
+        //             return $query->where('id', '!=', $id);
+        //         })
+        //     ],
+        // ]);
         $products = Products::find($req->id);
         $products->product_name = $req->product_name;
         $products->product_type = $req->product_type;
@@ -377,6 +379,8 @@ class ProductsController extends Controller
         $products->description = $req->description;
         $products->short_description = $req->short_description;
         $products->specification = $req->specification;
+        $products->features = $req->features;
+        $products->packaging_delivery_descr = $req->packaging_delivery_descr;
         $videoImage = $req->get('old_video');
         if ($req->hasFile('video')) {
             if ($products->video != null || $products->video != '') {

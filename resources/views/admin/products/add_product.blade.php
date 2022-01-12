@@ -205,6 +205,18 @@
                                       name="specification">{{ @$products['specification'] ? @$products['specification'] : old('specification') }}</textarea>
                         </div>
                         <div class="form-group">
+                            <label>Product Features:</label>
+                            <textarea id="features"
+                                      name="features">{{ @$products['features'] ? @$products['features'] : old('features') }}
+                            </textarea>
+                        </div>
+                         <div class="form-group">
+                            <label>Product Packaging Delivery Description:</label>
+                            <textarea id="packaging_delivery_descr"
+                                      name="packaging_delivery_descr">{{ @$products['packaging_delivery_descr'] ? @$products['packaging_delivery_descr'] : old('packaging_delivery_descr') }}
+                            </textarea>
+                        </div>
+                        <div class="form-group">
                             <label>Product Video:</label>
                             @if(isset($products))
                                 <video width="100" height="100" controls>
@@ -1030,7 +1042,11 @@
 
         CKEDITOR.replace('description');
         CKEDITOR.replace('short_description');
-        CKEDITOR.replace('specification');   
+        CKEDITOR.replace('specification');
+        CKEDITOR.replace('features');
+        CKEDITOR.replace('packaging_delivery_descr');
+         
+          
     </script>
     
     {{-- <script src="{{ asset('plugins/custom/ckeditor/ckeditor-classic.bundle.js?v=7.1.7') }}"></script> --}}
