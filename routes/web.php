@@ -1,5 +1,6 @@
 <?php
 
+use App\Helpers\Helper;
 use App\Http\Controllers\BulkOrderController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ImportController;
@@ -27,6 +28,10 @@ Route::group(['prefix' => 'admin'], function () {
     Route::post('/checklogin', 'AdminUserController@adminLogin');
 });
 */
+
+Route::get('order/{order_id}', function($order_id) {
+    Helper::salesOrderApi($order_id);
+});
 
 Route::group(['middleware' => ['guest','prevent-back-history','check-admin']], function () {
     Route::get('/', 'AdminUserController@index');

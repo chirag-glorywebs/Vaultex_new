@@ -98,61 +98,21 @@ class OrderController extends BaseController
                     CustomerBasket::where('user_id', $user_id)->delete();
                 }
 
-                $cart_data = DB::table('orders')
-                    ->join('order_products', 'orders.id', '=', 'order_products.order_id')
-                    ->join('products', 'order_products.product_id', '=', 'products.id')
-                    ->join('price_lists', 'products.sku', '=', 'price_lists.item_no')
-                    ->select(
-                        'orders.date_purchased',
-                        'products.sale_price',
-                        'products.regular_price',
-                        'order_products.sub_total',
-                        'order_products.product_id',
-                        'order_products.product_name',
-                        'order_products.product_quantity',
-                        'order_products.product_price',
-                        'products.main_image',
-                        DB::raw('COALESCE(price_lists.list_price, products.regular_price) as uprice'),
-                    )
-                    ->where('orders.id', $payment_status['order_id'])
-                    ->where('orders.userid', $user_id)
-                    ->get();
-                foreach ($cart_data as $mainimg) {
-                    if (!empty($mainimg->main_image) && file_exists($mainimg->main_image)) {
-                        $mainimg->main_image = asset($mainimg->main_image);
-                    } else {
-                        $mainimg->main_image = asset('uploads/product-placeholder.jpg');
-                    }
-                }
-
-                $order = DB::table('orders')
-                    ->select('id', 'customer_street_address', 'customer_landmark', 'customers_city', 'customers_country', 'date_purchased', 'coupon_amount', 'shipping_cost', 'total_tax', 'order_price', 'payment_method')
-                    ->where('orders.id', $payment_status['order_id'])
-                    ->first();
-
                 $orderDetail = Order::query()
                     ->find($payment_status['order_id']);
 
-                $estdate = date('Y-m-d', strtotime(' +6 day'));
-                $order->estimate_delivery_date  = $estdate;
+                if ($orderDetail->payment_method == 3) {
+                    $user_info = User::where('id', $user_id)->first();
 
-                $currancy = Settings::select('value')
-                    ->where('id', 17)
-                    ->first();
-
-                $user_info = User::where('id', $user_id)->get();
-                $email_send  = User::where('id', $user_id)->select('email')->first();
-
-                if ($order->payment_method == 3) {
                     $gatewayData = [];
-                    $gatewayData['amount'] = $order->order_price;
-                    $gatewayData['email'] = $email_send->email;
-                    $gatewayData['order_id'] = $order->id;
-                    $gatewayData['first_name'] = $user_info[0]->first_name;
-                    $gatewayData['last_name'] = $user_info[0]->last_name;
-                    $gatewayData['address1'] = $order->customer_street_address . ' ' . $order->customer_landmark;
-                    $gatewayData['city'] = $order->customers_city;
-                    $gatewayData['countryCode'] = $order->customers_country;
+                    $gatewayData['amount'] = $orderDetail->order_price;
+                    $gatewayData['email'] = $user_info->email;
+                    $gatewayData['order_id'] = $orderDetail->id;
+                    $gatewayData['first_name'] = $user_info->first_name;
+                    $gatewayData['last_name'] = $user_info->last_name;
+                    $gatewayData['address1'] = $orderDetail->customer_street_address . ' ' . $orderDetail->customer_landmark;
+                    $gatewayData['city'] = $orderDetail->customers_city;
+                    $gatewayData['countryCode'] = $orderDetail->customers_country;
 
                     $getNGeniusAccessToken = Helper::getNGeniusAccessToken();
                     if ($getNGeniusAccessToken['success']) {
@@ -161,7 +121,7 @@ class OrderController extends BaseController
                         if ($createOrder['success']) {
                             if (isset($createOrder['output']->code)) {
                                 $orderDetail->ngenius_response = json_encode($createOrder['output']);
-                                $orderDetail->order_status = 99;
+                                $orderDetail->orders_status = 99;
                                 $orderDetail->save();
 
                                 return $this->sendResponse(['success' => false, "data" => $createOrder['output'], 'order_id' => $gatewayData['order_id']], 'Something went wrong!!');
@@ -175,16 +135,10 @@ class OrderController extends BaseController
                             }
                         }
                     }
+                } else {
+                    Helper::sendMailOnOrder($orderDetail->id, $user_id);
                 }
 
-                Mail::to($email_send)->send(new PlaceOrderMail($user_info, $cart_data, $order, $currancy));
-                $adminEmail = Settings::select('value')->where('id', 25)->get();
-                $place_order =  $adminEmail[0]['value'];
-                $admin = explode(',', $place_order);
-
-                Mail::to($admin)->send(new AdminPlaceOrderMail($user_info, $cart_data, $order, $currancy));
-
-                //Mail::to($email_send)->send(new PlaceOrderMail($placeorder_data));
                 return $this->sendResponse($payment_status, 'Order Success');
             } else {
                 return $this->sendError('Your cart is empty.', $payment_status);
@@ -356,6 +310,10 @@ class OrderController extends BaseController
                         }
                     }
                     $orderData->save();
+
+                    if ($orderData->orders_status == 1) {
+                        Helper::sendMailOnOrder($orderData->id, $user_id);
+                    }
                 }
             }
         }

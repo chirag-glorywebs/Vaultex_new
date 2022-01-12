@@ -14,6 +14,10 @@ class Order extends Model
 {
     use HasFactory;
 
+    protected $casts = [
+        'date_purchased' => 'date'
+    ];
+
     //place_order
     public function place_order($request)
     {
