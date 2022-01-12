@@ -36,7 +36,7 @@
             <li><a data-toggle="tab" href="#tab3A">Variations</a></li>
          {{--    @endif --}}
             <li><a data-toggle="tab" href="#tab4">Tech Documents</a></li>
-            <li><a data-toggle="tab" href="#tab5">360 Images</a></li>
+            <!-- <li><a data-toggle="tab" href="#tab5">360 Images</a></li> -->
             <li><a data-toggle="tab" href="#tab6">Customer Reviews</a></li>
             <li><a data-toggle="tab" href="#tab7">FAQs</a></li>
             <li><a data-toggle="tab" href="#tab8">Training Videos</a></li>
@@ -627,7 +627,7 @@
             <!--------------------------------------------------------------------
             ------------------- Set the 360 images (Tab5)----------------------
             ---------------------------------------------------------------------->
-            <div id="tab5" class="tab-pane fade">
+            <!-- <div id="tab5" class="tab-pane fade">
                 @if(isset($products))
                     <form class="form galleryform" method="post"
                           action="{{ URL::to('/admin/products/updateThreeSixty')}}" enctype="multipart/form-data">
@@ -669,7 +669,7 @@
                 @else
                     <p class="text-center pt-30 pb-30">Please add product basic information first.</p>
                 @endif
-            </div>
+            </div> -->
             <!--------------------------------------------------------------------
             ---------- Set the customer reviews list (Tab6)-------------------
             ---------------------------------------------------------------------->
