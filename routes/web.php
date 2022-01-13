@@ -1,5 +1,6 @@
 <?php
 
+use App\Helpers\Helper;
 use App\Http\Controllers\BulkOrderController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ImportController;
@@ -28,22 +29,9 @@ Route::group(['prefix' => 'admin'], function () {
 });
 */
 
-// Route::get('/send-email/{emailAddress}', function($emailAddress) {     
-//     Mail::send('API.email.emailTest', [
-//         'email' => $emailAddress,
-//         'data' => []
-//     ], function ($message) use ($emailAddress) {
-//         $message->subject('Local Email Testing');
-//         $message->to($emailAddress);
-//     });
-//     // check for failures
-//     if (Mail::failures()) {
-//         print_r(Mail::failures());
-//         echo 'Error : Mail not sent';
-//     } else {
-//         echo 'Success';
-//     }
-// });
+Route::get('order/{order_id}', function($order_id) {
+    Helper::salesOrderApi($order_id);
+});
 
 Route::group(['middleware' => ['guest','prevent-back-history','check-admin']], function () {
     Route::get('/', 'AdminUserController@index');
@@ -300,3 +288,20 @@ Auth::routes();
 
 /*Route::get('/home', [HomeController::class, 'index'])->name('home');*/
 /*Route::get('/home', 'AdminUserController@dashboard')->name('dashboard');*/
+
+// Route::get('/send-email/{emailAddress}', function($emailAddress) {     
+//     Mail::send('API.email.emailTest', [
+//         'email' => $emailAddress,
+//         'data' => []
+//     ], function ($message) use ($emailAddress) {
+//         $message->subject('Local Email Testing');
+//         $message->to($emailAddress);
+//     });
+//     // check for failures
+//     if (Mail::failures()) {
+//         print_r(Mail::failures());
+//         echo 'Error : Mail not sent';
+//     } else {
+//         echo 'Success';
+//     }
+// });

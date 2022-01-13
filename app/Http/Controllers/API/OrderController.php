@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\API;
 
+use App\Helpers\Helper;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Order;
@@ -97,56 +98,47 @@ class OrderController extends BaseController
                     CustomerBasket::where('user_id', $user_id)->delete();
                 }
 
-                $cart_data = DB::table('orders')
-                    ->join('order_products', 'orders.id', '=', 'order_products.order_id')
-                    ->join('products', 'order_products.product_id', '=', 'products.id')
-                    ->join('price_lists', 'products.sku', '=', 'price_lists.item_no')
-                    ->select(
-                        'orders.date_purchased',
-                        'products.sale_price',
-                        'products.regular_price',
-                        'order_products.sub_total',
-                        'order_products.product_id',
-                        'order_products.product_name',
-                        'order_products.product_quantity',
-                        'order_products.product_price',
-                        'products.main_image',
-                        DB::raw('COALESCE(price_lists.list_price, products.regular_price) as uprice'),
-                    )
-                    ->where('orders.id', $payment_status['order_id'])
-                    ->where('orders.userid', $user_id)
-                    ->get();
-                foreach ($cart_data as $mainimg) {
-                    if (!empty($mainimg->main_image) && file_exists($mainimg->main_image)) {
-                        $mainimg->main_image = asset($mainimg->main_image);
-                    } else {
-                        $mainimg->main_image = asset('uploads/product-placeholder.jpg');
+                $orderDetail = Order::query()
+                    ->find($payment_status['order_id']);
+
+                if ($orderDetail->payment_method == 3) {
+                    $user_info = User::where('id', $user_id)->first();
+
+                    $gatewayData = [];
+                    $gatewayData['amount'] = $orderDetail->order_price;
+                    $gatewayData['email'] = $user_info->email;
+                    $gatewayData['order_id'] = $orderDetail->id;
+                    $gatewayData['first_name'] = $user_info->first_name;
+                    $gatewayData['last_name'] = $user_info->last_name;
+                    $gatewayData['address1'] = $orderDetail->customer_street_address . ' ' . $orderDetail->customer_landmark;
+                    $gatewayData['city'] = $orderDetail->customers_city;
+                    $gatewayData['countryCode'] = $orderDetail->customers_country;
+
+                    $getNGeniusAccessToken = Helper::getNGeniusAccessToken();
+                    if ($getNGeniusAccessToken['success']) {
+                        $access_token = $getNGeniusAccessToken['output']->access_token;
+                        $createOrder = Helper::createOrder($access_token, $gatewayData);
+                        if ($createOrder['success']) {
+                            if (isset($createOrder['output']->code)) {
+                                $orderDetail->ngenius_response = json_encode($createOrder['output']);
+                                $orderDetail->orders_status = 99;
+                                $orderDetail->save();
+
+                                return $this->sendResponse(['success' => false, "data" => $createOrder['output'], 'order_id' => $gatewayData['order_id']], 'Something went wrong!!');
+                            } elseif (isset($createOrder['output']->_links)) {
+                                $orderDetail->ngenius_order_link = $createOrder['output']->_links->payment->href;
+                                $orderDetail->ngenius_order_ref = $createOrder['output']->reference;
+                                $orderDetail->ngenius_response = json_encode($createOrder['output']);
+                                $orderDetail->save();
+
+                                return $this->sendResponse(['success' => true, 'link' => $createOrder['output']->_links->payment->href], 'Order Success');
+                            }
+                        }
                     }
+                } else {
+                    Helper::sendMailOnOrder($orderDetail->id, $user_id);
                 }
 
-                $order = DB::table('orders')
-                    ->select('id', 'date_purchased', 'coupon_amount', 'shipping_cost', 'total_tax', 'order_price')
-                    ->where('orders.id', $payment_status['order_id'])->first();
-
-                $estdate = date('Y-m-d', strtotime(' +6 day'));
-                $order->estimate_delivery_date  = $estdate;
-
-                $currancy = Settings::select('value')
-                    ->where('id', 17)
-                    ->first();
-
-                $user_info = User::where('id', $user_id)->get();
-                $email_send  = User::where('id', $user_id)->select('email')->first();
-                Mail::to($email_send)->send(new PlaceOrderMail($user_info, $cart_data, $order, $currancy));
-                $adminEmail = Settings::select('value')->where('id', 25)->get();
-                $place_order =  $adminEmail[0]['value'];
-                $admin = explode(',', $place_order);
-
-
-
-                Mail::to($admin)->send(new AdminPlaceOrderMail($user_info, $cart_data, $order, $currancy));
-
-                //Mail::to($email_send)->send(new PlaceOrderMail($placeorder_data));
                 return $this->sendResponse($payment_status, 'Order Success');
             } else {
                 return $this->sendError('Your cart is empty.', $payment_status);
@@ -297,6 +289,35 @@ class OrderController extends BaseController
     public function viewOrder($id, Request $request)
     {
         $user_id  = $request->user()->id;
+
+        $orderData = Order::query()
+            ->where('userid', $user_id)
+            ->find($id);
+
+        if ($orderData->payment_method == 3 && $orderData->status == 0) {
+            if ($orderData->ngenius_order_ref != null) {
+                $getNGeniusAccessToken = Helper::getNGeniusAccessToken();
+                if ($getNGeniusAccessToken['success']) {
+                    $access_token = $getNGeniusAccessToken['output']->access_token;
+                    $createOrder = Helper::orderRef($access_token, $orderData->ngenius_order_ref);
+                    $orderData->ngenius_response = json_encode($createOrder['output']);
+                    if ($createOrder['output']->_embedded && $createOrder['output']->_embedded->payment[0] && $createOrder['output']->_embedded->payment[0]->state) {
+                        if ($createOrder['output']->_embedded->payment[0]->state == "PURCHASED") {
+                            $orderData->orders_status = 1;
+                        }
+                        if ($createOrder['output']->_embedded->payment[0]->state == "FAILED") {
+                            $orderData->orders_status = 99;
+                        }
+                    }
+                    $orderData->save();
+
+                    if ($orderData->orders_status == 1) {
+                        Helper::sendMailOnOrder($orderData->id, $user_id);
+                    }
+                }
+            }
+        }
+
         $data =   Order::join('order_statuses', 'order_statuses.id', '=', 'orders.orders_status')
             ->where('orders.id', $id)->where('userid', $user_id)->select([
                 'orders.id', 'orders.userid', 'orders.payment_method', 'orders.addressid',
@@ -305,6 +326,7 @@ class OrderController extends BaseController
                 'orders.coupon_code', 'orders.coupon_amount', 'orders.total_tax',
                 'orders.ordered_source'
             ])->first();
+
         $totalPrice = 0;
         $products = Order_products::join('products', 'order_products.product_id', '=', 'products.id')
             ->join('orders', 'orders.id', '=', 'order_products.order_id')
@@ -399,7 +421,16 @@ class OrderController extends BaseController
         }
         $data->products   = $products;
 
-        $data->payment_method = 'Cash On Delivery';
+        if ($data->payment_method == 0) {
+            $data->payment_method = 'Use Credit';
+        } else if ($data->payment_method == 1) {
+            $data->payment_method = 'Cash On Delivery';
+        } else if ($data->payment_method == 3) {
+            $data->payment_method = 'Pay Online';
+        } else {
+            $data->payment_method = 'Cash On Delivery';
+        }
+
         $data->coupon_code =  json_decode($data->coupon_code);
 
         if (isset($data->coupon_code)) {

@@ -32,13 +32,13 @@ class CheckoutController extends Controller
         dd($request->all());
     }
 
-    public function ref()
+    public function ref(Request $request)
     {
         $getNGeniusAccessToken = Helper::getNGeniusAccessToken();
         if ($getNGeniusAccessToken['success']) {
             $access_token = $getNGeniusAccessToken['output']->access_token;
-            $createOrder = Helper::orderRef($access_token);
-            dd($createOrder);
+            $createOrder = Helper::orderRef($access_token, $request->ref);
+            // dd($createOrder);
             if ($createOrder['success']) {
                 if (isset($createOrder['output']->code)) {
                     return response()->json($createOrder['output']);

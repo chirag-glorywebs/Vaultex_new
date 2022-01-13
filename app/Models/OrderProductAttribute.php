@@ -9,4 +9,9 @@ class OrderProductAttribute extends Model
 {
     use HasFactory;
     public $timestamps = FALSE;
+
+    public function product()
+    {
+        return $this->hasOne(Products::class, 'id', 'product_id');
+    }
 }

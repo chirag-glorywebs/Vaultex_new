@@ -332,7 +332,8 @@ function paymentsMenthods()
    
     $methodArray = [
         [ 'id' => 1, 'payment_method' => 'cash_on_delivery'],
-        [ 'id' => 2, 'payment_method' => 'stripe']
+        // [ 'id' => 2, 'payment_method' => 'stripe']
+        [ 'id' => 3, 'payment_method' => 'pay_online']
     ];
     return $methodArray;
 }
