@@ -12,6 +12,7 @@ use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Mail;
+use stdClass;
 
 class Helper
 {
@@ -27,6 +28,15 @@ class Helper
             return $rolesByUser[$roleTitle];
         }
         return false;
+    }
+
+    public static function adminEmail()
+    {
+        $setting = Settings::find(5);
+        if ($setting) {
+            return $setting->value;
+        }
+        return "vaultex@vaultex.com";
     }
 
     public static function getNGeniusAccessToken()
@@ -63,13 +73,13 @@ class Helper
     public static function createOrder($token, $data = [])
     {
         try {
-            // $currencySetting = Settings::query()
-            //     ->find(17);
-            // if ($currencySetting) {
-            //     $currencyCode = $currencySetting->value;
-            // } else {
-            $currencyCode = "AED";
-            // }
+            $currencySetting = Settings::query()
+                ->find(17);
+            if ($currencySetting) {
+                $currencyCode = $currencySetting->value;
+            } else {
+                $currencyCode = "AED";
+            }
 
             if (!isset($data['order_id'])) {
                 $data['order_id'] = 28;
@@ -130,11 +140,7 @@ class Helper
     public static function orderRef($token, $ref = "")
     {
         try {
-            $outlet = "61016811-5bae-40e6-acf2-3d85079cbd23";
-            // $ref = "3d0bf4f9-63d9-4457-a8ce-9ad4abc3ad9e";
-            // $ref = "51bc0e11-97d4-46ad-94f7-e7e1ca25a888";
-
-            // return $postData;
+            $outlet = config('ngenius.outlet');
             $ch = curl_init();
 
             curl_setopt($ch, CURLOPT_URL, config('ngenius.api') . "transactions/outlets/" . $outlet . "/orders/" . $ref);
@@ -213,7 +219,7 @@ class Helper
 
         Mail::to($admin)->send(new AdminPlaceOrderMail($user_info, $cart_data, $order, $currancy));
 
-        // Self::salesOrderApi($order_id);
+        Self::salesOrderApi($order_id);
 
         return 'success';
     }
@@ -291,6 +297,8 @@ class Helper
         $output = curl_exec($ch);
         $output = json_decode($output);
         curl_close($ch);
+
+        // dd($output);
 
         return 'success';
     }

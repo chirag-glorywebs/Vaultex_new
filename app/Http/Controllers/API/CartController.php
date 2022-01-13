@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\API;
 
+use App\Helpers\Helper;
 use Illuminate\Http\Request;
 use App\Models\CustomerBasket;
 use App\Models\CustomerBasketAttribute;
@@ -218,7 +219,7 @@ class CartController extends BaseController
                 ->where('user_id', $user_id)
                 ->first();
 
-            $email = "admin@gmail.com";
+            $email = Helper::adminEmail();
             if ($request->sendMail) {
                 Mail::send('API.email.cart_product_update', [
                     'cart' => $product_attribute,
@@ -355,7 +356,7 @@ class CartController extends BaseController
                 ->where('user_id', $user_id)
                 ->first();
 
-            $email = "admin@gmail.com";
+            $email = Helper::adminEmail();
             if ($request->sendMail) {
                 Mail::send('API.email.cart_product_destroy', [
                     'cart' => $CustomerBasket,
