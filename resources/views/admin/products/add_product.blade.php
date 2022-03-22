@@ -36,7 +36,7 @@
             <li><a data-toggle="tab" href="#tab3A">Variations</a></li>
          {{--    @endif --}}
             <li><a data-toggle="tab" href="#tab4">Tech Documents</a></li>
-            <li><a data-toggle="tab" href="#tab5">360 Images</a></li>
+            <!-- <li><a data-toggle="tab" href="#tab5">360 Images</a></li> -->
             <li><a data-toggle="tab" href="#tab6">Customer Reviews</a></li>
             <li><a data-toggle="tab" href="#tab7">FAQs</a></li>
             <li><a data-toggle="tab" href="#tab8">Training Videos</a></li>
@@ -203,6 +203,18 @@
                             <label>Product Specification:</label>
                             <textarea id="specification"
                                       name="specification">{{ @$products['specification'] ? @$products['specification'] : old('specification') }}</textarea>
+                        </div>
+                        <div class="form-group">
+                            <label>Product Features:</label>
+                            <textarea id="features"
+                                      name="features">{{ @$products['features'] ? @$products['features'] : old('features') }}
+                            </textarea>
+                        </div>
+                         <div class="form-group">
+                            <label>Product Packaging Delivery Description:</label>
+                            <textarea id="packaging_delivery_descr"
+                                      name="packaging_delivery_descr">{{ @$products['packaging_delivery_descr'] ? @$products['packaging_delivery_descr'] : old('packaging_delivery_descr') }}
+                            </textarea>
                         </div>
                         <div class="form-group">
                             <label>Product Video:</label>
@@ -627,7 +639,7 @@
             <!--------------------------------------------------------------------
             ------------------- Set the 360 images (Tab5)----------------------
             ---------------------------------------------------------------------->
-            <div id="tab5" class="tab-pane fade">
+            <!-- <div id="tab5" class="tab-pane fade">
                 @if(isset($products))
                     <form class="form galleryform" method="post"
                           action="{{ URL::to('/admin/products/updateThreeSixty')}}" enctype="multipart/form-data">
@@ -669,7 +681,7 @@
                 @else
                     <p class="text-center pt-30 pb-30">Please add product basic information first.</p>
                 @endif
-            </div>
+            </div> -->
             <!--------------------------------------------------------------------
             ---------- Set the customer reviews list (Tab6)-------------------
             ---------------------------------------------------------------------->
@@ -1030,7 +1042,11 @@
 
         CKEDITOR.replace('description');
         CKEDITOR.replace('short_description');
-        CKEDITOR.replace('specification');   
+        CKEDITOR.replace('specification');
+        CKEDITOR.replace('features');
+        CKEDITOR.replace('packaging_delivery_descr');
+         
+          
     </script>
     
     {{-- <script src="{{ asset('plugins/custom/ckeditor/ckeditor-classic.bundle.js?v=7.1.7') }}"></script> --}}

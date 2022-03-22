@@ -23,6 +23,7 @@ use Illuminate\Support\Facades\Auth;
 
 use App\Http\Controllers\API\BaseController;
 use App\Models\CustomerBasket;
+use Illuminate\Support\Facades\Http;
 
 class OrderController extends BaseController
 {
@@ -49,7 +50,7 @@ class OrderController extends BaseController
     public function getInfo(Request $request)
     {
         $user_id = $request->user()->id;
-        $user_data = User::select('vendor_credit_limit','address_id')->where('user_role', 3)->where('status', 1)
+        $user_data = User::select('vendor_credit_limit', 'address_id')->where('user_role', 3)->where('status', 1)
             ->where('id', $user_id)
             ->first();
 
@@ -95,50 +96,57 @@ class OrderController extends BaseController
                         ->delete();
                     CustomerBasket::where('user_id', $user_id)->delete();
                 }
-                
+
                 $cart_data = DB::table('orders')
-                ->join('order_products','orders.id','=','order_products.order_id')
-                ->join('products','order_products.product_id','=','products.id')
-                ->join('price_lists', 'products.sku', '=', 'price_lists.item_no')  
-                ->select('orders.date_purchased','products.sale_price','products.regular_price',
-                'order_products.sub_total','order_products.product_id','order_products.product_name',
-                'order_products.product_quantity','order_products.product_price','products.main_image',
-                DB::raw('COALESCE(price_lists.list_price, products.regular_price) as uprice'),
-                )
-                ->where('orders.id',$payment_status['order_id'])
-                ->where('orders.userid',$user_id)
-                ->get();
-                foreach($cart_data as $mainimg){
+                    ->join('order_products', 'orders.id', '=', 'order_products.order_id')
+                    ->join('products', 'order_products.product_id', '=', 'products.id')
+                    ->join('price_lists', 'products.sku', '=', 'price_lists.item_no')
+                    ->select(
+                        'orders.date_purchased',
+                        'products.sale_price',
+                        'products.regular_price',
+                        'order_products.sub_total',
+                        'order_products.product_id',
+                        'order_products.product_name',
+                        'order_products.product_quantity',
+                        'order_products.product_price',
+                        'products.main_image',
+                        DB::raw('COALESCE(price_lists.list_price, products.regular_price) as uprice'),
+                    )
+                    ->where('orders.id', $payment_status['order_id'])
+                    ->where('orders.userid', $user_id)
+                    ->get();
+                foreach ($cart_data as $mainimg) {
                     if (!empty($mainimg->main_image) && file_exists($mainimg->main_image)) {
                         $mainimg->main_image = asset($mainimg->main_image);
                     } else {
                         $mainimg->main_image = asset('uploads/product-placeholder.jpg');
                     }
                 }
-            
-                    $order = DB::table('orders')
-                    ->select('id','date_purchased','coupon_amount','shipping_cost','total_tax','order_price')
-                    ->where('orders.id',$payment_status['order_id'])->first();
 
-                    $estdate = date('Y-m-d', strtotime(' +6 day'));
-                    $order->estimate_delivery_date  = $estdate;
-                    
+                $order = DB::table('orders')
+                    ->select('id', 'date_purchased', 'coupon_amount', 'shipping_cost', 'total_tax', 'order_price')
+                    ->where('orders.id', $payment_status['order_id'])->first();
+
+                $estdate = date('Y-m-d', strtotime(' +6 day'));
+                $order->estimate_delivery_date  = $estdate;
+
                 $currancy = Settings::select('value')
-                ->where('id',17)
-                 ->first();
+                    ->where('id', 17)
+                    ->first();
 
-            $user_info = User::where('id',$user_id)->get();
-            $email_send  =User::where('id',$user_id)->select('email')->first();
-            Mail::to($email_send)->send(new PlaceOrderMail($user_info,$cart_data,$order,$currancy));
-            $adminEmail = Settings::select('value')->where('id',25)->get();
-                 $place_order =  $adminEmail[0]['value'];
-                 $admin = explode(',',$place_order);
+                $user_info = User::where('id', $user_id)->get();
+                $email_send  = User::where('id', $user_id)->select('email')->first();
+                Mail::to($email_send)->send(new PlaceOrderMail($user_info, $cart_data, $order, $currancy));
+                $adminEmail = Settings::select('value')->where('id', 25)->get();
+                $place_order =  $adminEmail[0]['value'];
+                $admin = explode(',', $place_order);
 
-        
-        
-            Mail::to($admin)->send(new AdminPlaceOrderMail($user_info,$cart_data,$order,$currancy));
-                
-        //Mail::to($email_send)->send(new PlaceOrderMail($placeorder_data));
+
+
+                Mail::to($admin)->send(new AdminPlaceOrderMail($user_info, $cart_data, $order, $currancy));
+
+                //Mail::to($email_send)->send(new PlaceOrderMail($placeorder_data));
                 return $this->sendResponse($payment_status, 'Order Success');
             } else {
                 return $this->sendError('Your cart is empty.', $payment_status);
@@ -171,9 +179,9 @@ class OrderController extends BaseController
             )->orderBy('orders.id', "DESC")
             ->get();
         // return $data;
-       
+
         foreach ($data as $items) {
-        if ($items->status != 'Completed') {
+            if ($items->status != 'Completed') {
                 $track_order = DB::table('manage_order_status')
                     ->join('order_statuses', 'order_statuses.id', '=', 'manage_order_status.order_status_id')
                     ->where('manage_order_status.orderid', $items->id)
@@ -202,9 +210,8 @@ class OrderController extends BaseController
                 $items->track_order = $track_order;
             }
             $items->payment_method = 'Cash On Delivery';
-            
         }
-         # Additional total
+        # Additional total
         $grandTotal =  Order::where('userid', $user_id)->sum('order_price');
         return $this->sendResponse(['orders' => $data, 'grandTotal' => $grandTotal], 'order list');
     }
@@ -217,20 +224,20 @@ class OrderController extends BaseController
         $user_id = $request->user()->id;
         $orderby = (isset($request->orderby)) ?   $request->orderby : "id";
         $order =  (isset($request->order)) ?   $request->order : "ASC";
-    
-            $data = DB::table('orders')
-            ->join('order_products','orders.id','=', 'order_products.order_id') 
+
+        $data = DB::table('orders')
+            ->join('order_products', 'orders.id', '=', 'order_products.order_id')
             ->join('products', 'order_products.product_id', '=', 'products.id')
-            ->join('price_lists', 'products.sku', '=', 'price_lists.item_no')  
-           /*  ->join('users', 'price_lists.price_list_no', '=', 'users.price_list_no')   */
-            ->join('users', function($join){
+            ->join('price_lists', 'products.sku', '=', 'price_lists.item_no')
+            /*  ->join('users', 'price_lists.price_list_no', '=', 'users.price_list_no')   */
+            ->join('users', function ($join) {
                 $join->on('price_lists.price_list_no', '=', 'users.price_list_no')
-                     ->on('orders.userid', '=', 'users.id');
-            })  
-            ->leftJoin('liked_products', function($join){
+                    ->on('orders.userid', '=', 'users.id');
+            })
+            ->leftJoin('liked_products', function ($join) {
                 $join->on('products.id', '=', 'liked_products.liked_products_id')
-                     ->on('users.id', '=', 'liked_products.liked_customers_id');
-            }) 
+                    ->on('users.id', '=', 'liked_products.liked_customers_id');
+            })
             ->select(
                 'products.id',
                 'products.product_name',
@@ -249,20 +256,20 @@ class OrderController extends BaseController
                 'order_products.product_price AS order_price',
                 'order_products.sub_total',
                 'liked_products.id as wishlist',
-                
-                  DB::raw('COALESCE(price_lists.list_price, products.regular_price)as price'),  
-                  DB::raw('COALESCE(price_lists.list_price, products.regular_price) as uprice'),
-                   DB::raw('COALESCE(CAST(((products.regular_price - price_lists.list_price) * 100 / products.regular_price) as decimal(5,2)),0) discount')    
-              )
+
+                DB::raw('COALESCE(price_lists.list_price, products.regular_price)as price'),
+                DB::raw('COALESCE(price_lists.list_price, products.regular_price) as uprice'),
+                DB::raw('COALESCE(CAST(((products.regular_price - price_lists.list_price) * 100 / products.regular_price) as decimal(5,2)),0) discount')
+            )
             ->where('products.status', 1)
             ->where('orders.userid', $user_id)
             ->orderby($orderby, $order)
             ->get();
-            
+
         foreach ($data as $mainimg) {
 
-            
-            if(!empty($mainimg->wishlist) && ($mainimg->wishlist) != NULL){
+
+            if (!empty($mainimg->wishlist) && ($mainimg->wishlist) != NULL) {
                 $mainimg->wishlist = TRUE;
             }
 
@@ -272,22 +279,22 @@ class OrderController extends BaseController
                 $mainimg->main_image = asset($mainimg->main_image);
             } else {
                 $mainimg->main_image = asset('uploads/placeholder-medium.jpg');
-            } 
+            }
             if (!empty($mainimg->medium_image) && file_exists($mainimg->medium_image)) {
                 $mainimg->medium_image = asset($mainimg->medium_image);
             } else {
                 $mainimg->medium_image = asset('uploads/placeholder-medium.jpg');
-            } 
+            }
             if (!empty($mainimg->thumbnail_image) && file_exists($mainimg->thumbnail_image)) {
                 $mainimg->thumbnail_image = asset($mainimg->thumbnail_image);
             } else {
                 $mainimg->thumbnail_image = asset('uploads/placeholder-medium.jpg');
-            } 
+            }
         }
         return $this->sendResponse($data, 'Order items list');
     }
 
-     public function viewOrder($id, Request $request)
+    public function viewOrder($id, Request $request)
     {
         $user_id  = $request->user()->id;
         $data =   Order::join('order_statuses', 'order_statuses.id', '=', 'orders.orders_status')
@@ -320,7 +327,7 @@ class OrderController extends BaseController
             )
             ->where('products.status', 1)
             ->where('orders.id', $id)
-            ->where('orders.userid', $user_id)            
+            ->where('orders.userid', $user_id)
             ->get();
 
         if ($data->status != 'Completed') {
@@ -364,27 +371,29 @@ class OrderController extends BaseController
                 $product->medium_image = asset($product->medium_image);
             } else {
                 $product->medium_image = asset('uploads/placeholder-medium.jpg');
-            } 
+            }
 
             if (!empty($product->thumbnail_image) && file_exists($product->thumbnail_image)) {
                 $product->thumbnail_image = asset($product->thumbnail_image);
             } else {
                 $product->thumbnail_image = asset('uploads/placeholder-medium.jpg');
-            } 
-           
+            }
+
             $attributes = DB::table('order_product_attributes')->join('order_products', 'order_product_attributes.order_product_id', '=', 'order_products.id')
                 ->where('order_product_attributes.order_id', $id)
                 ->where('order_product_attributes.product_id', $product->id)
-                ->select('order_product_attributes.variant_id', 
-                'order_product_attributes.item_code',
-                'order_product_attributes.item_name',
-                'order_product_attributes.variant_data',
-                'order_product_attributes.quantity',
-                'order_product_attributes.product_price')
-                ->get();  
+                ->select(
+                    'order_product_attributes.variant_id',
+                    'order_product_attributes.item_code',
+                    'order_product_attributes.item_name',
+                    'order_product_attributes.variant_data',
+                    'order_product_attributes.quantity',
+                    'order_product_attributes.product_price'
+                )
+                ->get();
             $product->products_attributes = $attributes;
 
-            $productPriceWithCategories = Products::getProductPrice($user_id, $product->id);            
+            $productPriceWithCategories = Products::getProductPrice($user_id, $product->id);
             $product->uprice = $productPriceWithCategories->uprice;
             $product->productCategories = $productPriceWithCategories->productCategories;
         }
@@ -413,5 +422,13 @@ class OrderController extends BaseController
         // return $totalPrice;
         $data->grandTotal = $totalPrice;
         return $this->sendResponse($data, 'View order Details.');
+    }
+
+    public function GetItemStock(Request $request)
+    {
+        $response = Http::get('http://192.168.22.8/IndusAPI/api/ItemMaster/GetItemStock', [
+            'ItemGrp' => $request->ItemGrp,
+        ]);
+        return $this->sendResponse(json_decode($response->body(), true), 'Available stock');
     }
 }

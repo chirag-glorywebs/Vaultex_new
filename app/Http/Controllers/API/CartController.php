@@ -13,6 +13,7 @@ use App\Models\ProductAttribute;
 use Illuminate\Support\Facades\DB;
 use App\Models\Coupon;
 use App\Models\Cart;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\Rules\Exists;
 use PhpParser\Node\Expr\AssignOp\Concat;
 
@@ -21,12 +22,11 @@ class CartController extends BaseController
 
     protected $apiBaseUrl;
 
-    public function __construct(Cart $cart,Coupon $coupon)
+    public function __construct(Cart $cart, Coupon $coupon)
     {
         $this->cart = $cart;
         $this->coupon = $coupon;
         $this->apiBaseUrl = 'http://192.168.22.8/IndusAPI/api';
-
     }
     /**
      * Add to Cart api
@@ -38,89 +38,88 @@ class CartController extends BaseController
         # code...
         if (Auth::guard('api')->check()) {
             $user_id = $request->user('api')->id;
-      
-      /*   $user = Auth::user(); 
+
+            /*   $user = Auth::user(); 
         $user_id =  $user->id; */
-        $validator = Validator::make($request->all(), [
-            'product_id' => 'required'
-        ]);
+            $validator = Validator::make($request->all(), [
+                'product_id' => 'required'
+            ]);
 
-        if ($validator->fails()) {
-            return $this->sendError('Validation Error.', $validator->errors());
-        } else {
-
-            $productData = DB::table('products')
-                    ->join('price_lists', 'products.sku', '=', 'price_lists.item_no') 
-                    ->join('users', 'price_lists.price_list_no', '=', 'users.price_list_no')
-                    ->select('price_lists.list_price AS uprice', 'products.regular_price', 'products.sale_price','sku')->where('users.id', $user_id)->where('products.id', $request->product_id)->first();
-         /*  $productData = Products::select('regular_price', 'sale_price','sku')->where('id', $request->product_id)->first(); */
-            if(!empty($productData)){
-            $regular =  $productData->regular_price;
-            $sale =  $productData->sale_price;
-            $uprice = $productData->uprice;
-            $sale = $uprice;
-           
-           
-            $basketExist = CustomerBasket::where(['product_id' => $request->product_id, 'user_id' => $user_id])->first();
-        if ($basketExist) {
-                if (!empty($request->product_option)) {
-                    foreach ($request->product_option as $data) {
-                        $optionCart = CustomerBasketAttribute::where(['product_id' => $request->product_id, 'customer_id' => $user_id, 'variant_id' => $data["variant_id"]])->first();
-                        if ($optionCart) {
-                            $optionCart->quantity =  $optionCart->quantity +  $data['quantity'];
-                            $optionCart->save();
-                        } else {
-                            $cba = new CustomerBasketAttribute;
-                            $cba->customers_basket_id = $basketExist->id;
-                            $cba->customer_id = $user_id;
-                            $cba->product_id = $request->product_id;
-                            $cba->variant_id = $data['variant_id'];
-                            $cba->quantity = $data['quantity'];
-                            $cba->save();
-                        }
-                        $basketExist->quantity = $basketExist->quantity +  $data['quantity'];
-                      
-                    }
-                    $basketExist->sub_total = $basketExist->quantity * $basketExist->price;
-                    $cartDetails = $basketExist->save();
-                    return $this->sendResponse($cartDetails, 'Product  has been added to your cart');
-                }
+            if ($validator->fails()) {
+                return $this->sendError('Validation Error.', $validator->errors());
             } else {
-                $CustomerBasket = new CustomerBasket;
-                $CustomerBasket->product_id = $request->product_id;
-                /*   $CustomerBasket->quantity = $request->quantity; */
-                $CustomerBasket->user_id = $user_id;
-               /*  if (!empty($sale != 0)) {
+
+                $productData = DB::table('products')
+                    ->join('price_lists', 'products.sku', '=', 'price_lists.item_no')
+                    ->join('users', 'price_lists.price_list_no', '=', 'users.price_list_no')
+                    ->select('price_lists.list_price AS uprice', 'products.regular_price', 'products.sale_price', 'sku')->where('users.id', $user_id)->where('products.id', $request->product_id)->first();
+                /*  $productData = Products::select('regular_price', 'sale_price','sku')->where('id', $request->product_id)->first(); */
+                if (!empty($productData)) {
+                    $regular =  $productData->regular_price;
+                    $sale =  $productData->sale_price;
+                    $uprice = $productData->uprice;
+                    $sale = $uprice;
+
+
+                    $basketExist = CustomerBasket::where(['product_id' => $request->product_id, 'user_id' => $user_id])->first();
+                    if ($basketExist) {
+                        if (!empty($request->product_option)) {
+                            foreach ($request->product_option as $data) {
+                                $optionCart = CustomerBasketAttribute::where(['product_id' => $request->product_id, 'customer_id' => $user_id, 'variant_id' => $data["variant_id"]])->first();
+                                if ($optionCart) {
+                                    $optionCart->quantity =  $optionCart->quantity +  $data['quantity'];
+                                    $optionCart->save();
+                                } else {
+                                    $cba = new CustomerBasketAttribute;
+                                    $cba->customers_basket_id = $basketExist->id;
+                                    $cba->customer_id = $user_id;
+                                    $cba->product_id = $request->product_id;
+                                    $cba->variant_id = $data['variant_id'];
+                                    $cba->quantity = $data['quantity'];
+                                    $cba->save();
+                                }
+                                $basketExist->quantity = $basketExist->quantity +  $data['quantity'];
+                            }
+                            $basketExist->sub_total = $basketExist->quantity * $basketExist->price;
+                            $cartDetails = $basketExist->save();
+                            return $this->sendResponse($cartDetails, 'Product  has been added to your cart');
+                        }
+                    } else {
+                        $CustomerBasket = new CustomerBasket;
+                        $CustomerBasket->product_id = $request->product_id;
+                        /*   $CustomerBasket->quantity = $request->quantity; */
+                        $CustomerBasket->user_id = $user_id;
+                        /*  if (!empty($sale != 0)) {
                     $CustomerBasket->price = $sale;
                 } else {
                     $CustomerBasket->price = $regular;
                 } */
-                $CustomerBasket->price = $sale;
-                $cartDetails = $CustomerBasket->save();
-                $CustomerBasketID = $CustomerBasket->id;
-                $totalQty = 0;
-                if (!empty($request->product_option)) {
-                    foreach ($request->product_option as $data) {
-                        $cba = new CustomerBasketAttribute;
-                        $cba->customers_basket_id = $CustomerBasketID;
-                        $cba->customer_id = $user_id;
-                        $cba->product_id = $request->product_id;
-                        $cba->variant_id = $data['variant_id']; 
-                        $cba->quantity = $data['quantity'];
-                        $cba->save();
-                        $totalQty = $data['quantity'] + $totalQty;
+                        $CustomerBasket->price = $sale;
+                        $cartDetails = $CustomerBasket->save();
+                        $CustomerBasketID = $CustomerBasket->id;
+                        $totalQty = 0;
+                        if (!empty($request->product_option)) {
+                            foreach ($request->product_option as $data) {
+                                $cba = new CustomerBasketAttribute;
+                                $cba->customers_basket_id = $CustomerBasketID;
+                                $cba->customer_id = $user_id;
+                                $cba->product_id = $request->product_id;
+                                $cba->variant_id = $data['variant_id'];
+                                $cba->quantity = $data['quantity'];
+                                $cba->save();
+                                $totalQty = $data['quantity'] + $totalQty;
+                            }
+                            $CustomerBasket->quantity = $totalQty;
+                            $CustomerBasket->sub_total = $totalQty * $CustomerBasket->price;
+                            $CustomerBasket->save();
+                        }
+                        return $this->sendResponse($cartDetails, 'Product  has been added to your cart');
                     }
-                    $CustomerBasket->quantity = $totalQty;
-                    $CustomerBasket->sub_total = $totalQty * $CustomerBasket->price;
-                    $CustomerBasket->save();
+                } else {
+                    return $this->sendError(false, 'Product data not found');
                 }
-                return $this->sendResponse($cartDetails, 'Product  has been added to your cart');
-                }
-            }else{
-                return $this->sendError(false, 'Product data not found');
             }
-        }
-        }else{
+        } else {
             return $this->sendError(false, "Unauthorised user.");
         }
     }
@@ -133,8 +132,8 @@ class CartController extends BaseController
     public function index(Request $request)
     {
         $user_id = $request->user()->id;
-        $cartItems = $this->cart->myCart($user_id,$request);
-         
+        $cartItems = $this->cart->myCart($user_id, $request);
+
         if ($cartItems['grandTotal'] > 0) {
             return $this->sendResponse($cartItems, 'Cart Product List');
         } else {
@@ -213,9 +212,23 @@ class CartController extends BaseController
                 ->where('customer_id', $user_id)
                 ->where('variant_id', $request->variant_id)
                 ->first();
-            $product_attribute =   CustomerBasket::where('product_id', $request->product_id)
+            $product_attribute = CustomerBasket::query()
+                ->with('product', 'user')
+                ->where('product_id', $request->product_id)
                 ->where('user_id', $user_id)
                 ->first();
+
+            $email = "admin@gmail.com";
+            if ($request->sendMail) {
+                Mail::send('API.email.cart_product_update', [
+                    'cart' => $product_attribute,
+                    'quantity' => $request->quantity,
+                    'fromQuantity' => $request->fromQuantity,
+                ], function ($message) use ($email) {
+                    $message->subject('Cart product updated beacuse insufficient quantity!');
+                    $message->to($email);
+                });
+            }
 
             if (!empty($product_attribute) && !empty($product_variation)) {
 
@@ -245,7 +258,7 @@ class CartController extends BaseController
      */
     public function multiupdate(Request $request)
     {
-        
+
         $requestData = $request->all();
         return $requestData;
         foreach ($requestData as $key => $cartItem) {
@@ -261,7 +274,7 @@ class CartController extends BaseController
             if (!empty($product_attribute) && !empty($product_variation)) {
                 $total_qty = $product_attribute->quantity;
                 $total_qty =  ($total_qty - $product_variation->quantity) + $cartItem['quantity'];
-                if($total_qty<=0){
+                if ($total_qty <= 0) {
                     $product_variation->quantity  = $cartItem['quantity'];
                     $product_attribute->quantity  = $total_qty;
                     $product_attribute->sub_total  = number_format((float)$total_qty * $product_attribute->price, 2, '.', '');
@@ -271,12 +284,11 @@ class CartController extends BaseController
                 } else {
                     $CustomerBasket =  CustomerBasket::where('product_id', $cartItem['product_id'])->where('user_id', $user_id)->first();
                     $data = CustomerBasketAttribute::where('customers_basket_id', $CustomerBasket->id)->delete();
-                    if(($key+1)==count($requestData)){
+                    if (($key + 1) == count($requestData)) {
                         $data =  CustomerBasket::where('product_id',  $cartItem['product_id'])->where('user_id', $user_id)->delete();
                     }
                 }
             }
-
         }
         return $this->sendResponse([], "Cart quantity updated successfully");
 
@@ -337,8 +349,22 @@ class CartController extends BaseController
         if ($validator->fails()) {
             return $this->sendError('Validation Error.', $validator->errors());
         } else {
-            $CustomerBasket =  CustomerBasket::where('product_id', $product_id)->where('user_id', $user_id)->first();
-             
+            $CustomerBasket =  CustomerBasket::query()
+                ->with('product', 'user')
+                ->where('product_id', $product_id)
+                ->where('user_id', $user_id)
+                ->first();
+
+            $email = "admin@gmail.com";
+            if ($request->sendMail) {
+                Mail::send('API.email.cart_product_destroy', [
+                    'cart' => $CustomerBasket,
+                ], function ($message) use ($email) {
+                    $message->subject('Cart product deleted beacuse insufficient quantity!');
+                    $message->to($email);
+                });
+            }
+
             $data = CustomerBasketAttribute::where('customers_basket_id', $CustomerBasket->id)->delete();
             $data =  CustomerBasket::where('product_id', $product_id)->where('user_id', $user_id)->delete();
 
@@ -360,9 +386,8 @@ class CartController extends BaseController
     public function applyCoupon(Request $request)
     {
         # code...
-      $data =   $this->coupon->applyCoupon($request);
-      return $data;
-
+        $data =   $this->coupon->applyCoupon($request);
+        return $data;
     }
 
 
@@ -391,7 +416,7 @@ class CartController extends BaseController
     //     }
 
     // }
-     
+
 
     /**
      *  
@@ -408,33 +433,34 @@ class CartController extends BaseController
      *
      * @return \Illuminate\Http\Response
      */
-    public function checkItemInStock(Request $request){
-        
-        try{
+    public function checkItemInStock(Request $request)
+    {
+
+        try {
             $requestData = $request->all();
-            $outOfStockProductResult = [];     
+            $outOfStockProductResult = [];
             $user_id = $request->user()->id;
-            
+
             foreach ($requestData['items'] as $itemKey => $itemValue) {
-                $sku = ($itemValue['sku']) ? $itemValue['sku']: '';
-                $xml_data = $this->getXMLData($this->apiBaseUrl.'/ItemMaster/GetItemStock?ItemGrp='.$sku);            
+                $sku = ($itemValue['sku']) ? $itemValue['sku'] : '';
+                $xml_data = $this->getXMLData($this->apiBaseUrl . '/ItemMaster/GetItemStock?ItemGrp=' . $sku);
                 $xml = simplexml_load_string($xml_data, 'SimpleXMLElement', LIBXML_COMPACT | LIBXML_PARSEHUGE);
                 $apiStockArr = json_decode($xml);
 
                 $stockResponse = [];
                 // foreach ($itemValue['products_attributes'] as $key => $productAttr) {
-                    // $stockResponse[] = SELF::getOutOfStockProduct($productAttr, $apiStockArr, $itemValue['id']);
-                    $stockResponse[] = SELF::getOutOfStockProduct($itemValue['products_attributes'], $apiStockArr, $itemValue['id'], $user_id);
+                // $stockResponse[] = SELF::getOutOfStockProduct($productAttr, $apiStockArr, $itemValue['id']);
+                $stockResponse[] = SELF::getOutOfStockProduct($itemValue['products_attributes'], $apiStockArr, $itemValue['id'], $user_id);
                 // }
 
                 // $stockResponse = SELF::getOutOfStockProduct($itemValue, $apiStockArr);
-                if(count($stockResponse) > 0){
+                if (count($stockResponse) > 0) {
                     $stockResponse = array_filter($stockResponse);
                     $outOfStockProductResult[] = $stockResponse;
                 }
             }
 
-            
+
             $outOfStockProduct = [];
             $outOfStockProduct = $outOfStockProductResult;
 
@@ -442,85 +468,81 @@ class CartController extends BaseController
             // return $outOfStockProduct;
 
             $outOfStockData = [];
-            if(count($outOfStockProduct) > 0){
+            if (count($outOfStockProduct) > 0) {
                 $outOfStockData = $outOfStockProduct;
                 return $this->sendResponse($outOfStockData, 'Out of stock data.');
             }
             return $this->sendResponse($outOfStockData, 'All products available in stock.');
-        } catch(Exception $exception) {
+        } catch (Exception $exception) {
             return $this->sendError($exception->getMessage());
         }
-
     }
 
-    public function getOutOfStockProduct($productAttr, $apiStockArr, $productId, $user_id){
+    public function getOutOfStockProduct($productAttr, $apiStockArr, $productId, $user_id)
+    {
 
-            $result= [];
-            foreach ($productAttr as $key => $productAttrValue) {
-                $found_key = false;
-                if($apiStockArr){
-                    $found_key = array_search($productAttrValue['item_code'], array_column($apiStockArr, 'ItemCode'));
-                }
-                if($found_key===false){
-                    // No attribute available then delete Product Cart Attribute                    
-                    $dataArr = [
-                        // 'product_name' => $product['product_name'],
-                        'product_id' => $productId,
-                        'item_code' => $productAttrValue['item_code'],
-                        'quantity' => 0,
-                        'not_in_stock_quantity' => $productAttrValue['quantity'],
-                        'variant_id' => $productAttrValue['variant_id'],
-                        'user_id' => $user_id,
-                    ];
-                    $result[] = $dataArr;
+        $result = [];
+        foreach ($productAttr as $key => $productAttrValue) {
+            $found_key = false;
+            if ($apiStockArr) {
+                $found_key = array_search($productAttrValue['item_code'], array_column($apiStockArr, 'ItemCode'));
+            }
+            if ($found_key === false) {
+                // No attribute available then delete Product Cart Attribute                    
+                $dataArr = [
+                    // 'product_name' => $product['product_name'],
+                    'product_id' => $productId,
+                    'item_code' => $productAttrValue['item_code'],
+                    'quantity' => 0,
+                    'not_in_stock_quantity' => $productAttrValue['quantity'],
+                    'variant_id' => $productAttrValue['variant_id'],
+                    'user_id' => $user_id,
+                ];
+                $result[] = $dataArr;
 
-                    // Delete Product Attribute
-                    $deleted = SELF::deleteCartProductAttribute($dataArr);
+                // Delete Product Attribute
+                $deleted = SELF::deleteCartProductAttribute($dataArr);
+            } else {
+                $apiItem = $apiStockArr[$found_key];
+                if ($apiItem->ItemCode == $productAttrValue['item_code']) {
+                    $inStockProducts = ($apiItem->AvailableStock - $apiItem->Committed);
+                    if ((int)$productAttrValue['quantity'] > (int)$inStockProducts) {
+                        $totalAvailableQty = $inStockProducts;
+                        $totalNotAvailableQty = $productAttrValue['quantity'] - $inStockProducts;
+                        $dataArr = [
+                            'product_id' => $productId,
+                            'item_code' => $productAttrValue['item_code'],
+                            'quantity' => $totalAvailableQty,
+                            'not_in_stock_quantity' => $totalNotAvailableQty,
+                            'variant_id' => $productAttrValue['variant_id'],
+                            'user_id' => $user_id
+                        ];
+                        $result[] = $dataArr;
 
-                } else {
-                    $apiItem = $apiStockArr[$found_key];
-                    if($apiItem->ItemCode==$productAttrValue['item_code']){
-                        $inStockProducts = ($apiItem->AvailableStock - $apiItem->Committed);            
-                        if( (int)$productAttrValue['quantity'] > (int)$inStockProducts ) {
-                            $totalAvailableQty = $inStockProducts;
-                            $totalNotAvailableQty = $productAttrValue['quantity'] - $inStockProducts;
-                            $dataArr = [
-                                'product_id' => $productId,
-                                'item_code' => $productAttrValue['item_code'],
-                                'quantity' => $totalAvailableQty,
-                                'not_in_stock_quantity' => $totalNotAvailableQty,
-                                'variant_id' => $productAttrValue['variant_id'],
-                                'user_id' => $user_id
-                            ];
-                            $result[] = $dataArr;
-
-                            // check product attribute in stock then update in cart otherwise remove in cart
-                            if($totalAvailableQty<=0){
-                                // Delete Product Attribute
-                                $deleted = SELF::deleteCartProductAttribute($dataArr);
-
-                            } else {
-                                // Update Product Attribute Quantity
-                                $updated = SELF::updateCartProductAttribute($dataArr);
-                            }
-
-                        } 
-                    } 
-
+                        // check product attribute in stock then update in cart otherwise remove in cart
+                        if ($totalAvailableQty <= 0) {
+                            // Delete Product Attribute
+                            $deleted = SELF::deleteCartProductAttribute($dataArr);
+                        } else {
+                            // Update Product Attribute Quantity
+                            $updated = SELF::updateCartProductAttribute($dataArr);
+                        }
+                    }
                 }
             }
-            return $result;
-    }  
+        }
+        return $result;
+    }
 
     public function deleteCartProductAttribute($cartItem)
-    {      
-        
+    {
+
         $customerBasket =  CustomerBasket::where('product_id', $cartItem['product_id'])->where('user_id', $cartItem['user_id'])->first();
-        if($customerBasket){
+        if ($customerBasket) {
             $deleteProductAttribute = CustomerBasketAttribute::where('customers_basket_id', $customerBasket->id)->delete();
-            if($deleteProductAttribute){
+            if ($deleteProductAttribute) {
                 $attrCount = CustomerBasketAttribute::where('customers_basket_id', $customerBasket->id)->count();
-                if($attrCount==0){
+                if ($attrCount == 0) {
                     $deleteProduct =  CustomerBasket::where('product_id',  $cartItem['product_id'])->where('user_id', $cartItem['user_id'])->delete();
                 }
             }
@@ -529,7 +551,7 @@ class CartController extends BaseController
     }
 
     public function updateCartProductAttribute($cartItem)
-    {        
+    {
 
         $product_variation =   CustomerBasketAttribute::where('product_id', $cartItem['product_id'])
             ->where('customer_id', $cartItem['user_id'])
@@ -543,7 +565,7 @@ class CartController extends BaseController
         if (!empty($product_attribute) && !empty($product_variation)) {
             $total_qty = $product_attribute->quantity;
             $total_qty =  ($total_qty - $product_variation->quantity) + $cartItem['quantity'];
-            if($total_qty<=0) {
+            if ($total_qty <= 0) {
                 $product_variation->quantity  = $cartItem['quantity'];
                 $product_attribute->quantity  = $total_qty;
                 $product_attribute->sub_total  = number_format((float)$total_qty * $product_attribute->price, 2, '.', '');
@@ -553,7 +575,6 @@ class CartController extends BaseController
             }
         }
         return true;
-
     }
 
 
@@ -595,7 +616,7 @@ class CartController extends BaseController
     // public function getOutOfStockProduct($product, $apiStockArr){
 
     //     foreach ($product['products_attributes'] as $key => $productAttr) {
-           
+
     //         // $productAttr = $product['products_attributes'][0];  
 
     //         $found_key = false;
@@ -642,7 +663,6 @@ class CartController extends BaseController
 
         $resp = curl_exec($curl);
         curl_close($curl);
-        return $resp; 
+        return $resp;
     }
-
 }
